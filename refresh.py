@@ -26,12 +26,11 @@ def refresh_services():
         reload(services)
         for root, dirs, files in os.walk("./services"):
             for service in files:
-                if service.startswith("video__") and service.endswith(".py"):
-                    for existing_service in services_list:
-                        if service[:-3] == existing_service[0]:
-                            break
+                if service.startswith("video__") and service.endswith(".py") and not service == 'video__webpage.py':
+                    if service[:-3] in services_list:
+                        break
                     else:
-                        services_list.append([service[:-3], eval('services.' + service[:-3] + '.regex'), eval('services.' + service[:-3] + '.commands')])
+                        services_list.append([service[:-3], eval('services.' + service[:-3] + '.url_regex'), eval('services.' + service[:-3] + '.service_commands')])
                         new_services += 1
                         print('Found service ' + service[:-3] + '.')
         new_count = new_services-services_count

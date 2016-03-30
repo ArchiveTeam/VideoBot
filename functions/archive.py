@@ -3,14 +3,14 @@ import irc_bot
 import refresh
 import threading
 import re
-import check_url
+import url
 import services
 
 def irc_bot_print(irc_channel, irc_bot_message):
     irc_bot.irc_bot_print(irc_channel, irc_bot_message)
 
 def find_url_service(url):
-    return check_url.find_url_service(url)
+    return url.find_url_service(url)
 
 def main(command, user):
     if len(command) == 1:

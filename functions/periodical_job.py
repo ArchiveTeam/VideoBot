@@ -9,43 +9,45 @@ import re
 import os
 import random
 import string
-import check_url
+import url
 import services
 
-def irc_bot_print(irc_channel, irc_bot_message):
-    irc_bot.irc_bot_print(irc_channel, irc_bot_message)
+irc_bot_print = lambda irc_channel, irc_bot_message: irc_bot.irc_bot_print(irc_channel, irc_bot_message)
+check_temp_perjob_variable = lambda ticket_id, var: periodical_jobs.check_temp_perjob.check_temp_perjob_variable(ticket_id, var)
+check_valid_url = lambda url: check_valid.check_valid_url(url)
+find_url_service = lambda url: url.find_url_service(url)
+find_url_title = lambda url_service, url: url.find_url_title(url_service, url)
+find_url_service_name = lambda url_service: url.find_url_service_name(url_service)
+find_url_id = lambda url_service, url: url.find_url_id(url_service, url)
+find_command_service = lambda command: check_command.find_command_service(command)
 
-def check_temp_perjob_variable(ticket_id, var):
-    return periodical_jobs.check_temp_perjob.check_temp_perjob_variable(ticket_id, var)
-
-def check_valid_url(url):
-    return check_valid.check_valid_url(url)
-
-def find_url_service(url):
-    return check_url.find_url_service(url)
-
-def find_url_title(url_service, url):
-    return check_url.find_url_title(url_service, url)
-
-def find_url_service_name(url_service):
-    return check_url.find_url_service_name(url_service)
-
-def find_url_id(url_service, url):
-    return check_url.find_url_id(url_service, url)
-
-def find_command_service(command):
-    return check_command.find_command_service(command)
+command_url = ''
 
 def main(message, user):
+    '''Create a periodical job.
+
+    Usage:
+    !perjob
+        to create a new periodical job.
+    !perjob <command> <ticket ID> <command dependent>
+        to specify a command for the job.
+    
+    With commands and command dependent variables:
+    --service-url and <URL>
+        to periodically scrape a service.
+    --scrape-url and <URL>
+        to periodically scrape links from a webpage.
+    '''
     if len(message) == 1:
         ticket_id = ''.join(random.choice(string.ascii_lowercase) for num in range(10))
         with open('temp_perjobs/'+ticket_id+'.py', 'a') as file:
             file.write('user = \'' + user + '\'\n')
         irc_bot_print(irc_channel, user + ': Your ticket ID is \'' + ticket_id + '\'. The ticket is open for 24 hours.')
-        irc_bot_print(irc_channel, user + ': For single URL \'!perjob single-url <ticket ID> <URL>\'.')
-    elif message[1] == 'single-url':
+        irc_bot_print(irc_channel, user + ': Configure your new periodical job using \'!perjob <command> <ticket ID> <command dependent>\'.')
+        irc_bot_print(irc_channel, user + ': See ' + command_url + ' for available commands.')
+    elif message[1] == '--service-url':
         if len(message) != 4:
-            irc_bot_print(irc_channel, user + ': For single URL \'!perjob single-url <ticket ID> <URL>\'.')
+            irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
         else:
             ticket_id = message[2]
             if not os.path.isfile('temp_perjobs/'+ticket_id+'.py'):
@@ -66,6 +68,34 @@ def main(message, user):
                         process_messages('add_url', url, ticket_id, user, ticket_id, url_service)
                     else:
                         irc_bot_print(irc_channel, user + ': URL \'' + message[3] + '\' is currently not supported.')
+    elif message[1] == '--scrape-url':
+        if len(message) != 4:
+            irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
+        else:
+            ticket_id = message[2]
+            if not os.path.isfile('temp_perjobs/'+ticket_id+'.py'):
+                irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
+            else:
+                url = message[3]
+                if check_temp_perjob_variable(ticket_id, 'url'):
+                    irc_bot_print(irc_channel, user + ': You already provided an URL for ticket ID \'' + ticket_id + '\'.')
+                elif check_valid_url(url) == False:
+                    irc_bot_print(irc_channel, user + ': URL \'' + url + '\' doesn\'t seem to be valid.')
+                else:
+                    url_service = 'video__webpage'
+                    service_name = find_url_service_name(url_service)
+                    irc_bot_print(irc_channel, user + ': Found ' + service_name + ' \'' + url + '\'.')
+                    process_messages('add_url', url, ticket_id, user, ticket_id, url_service)
+    elif message[1] == '--edit':
+        if len(message) != 3:
+            irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
+        else:
+            ticket_id = message[2]
+            if not os.path.isfile('periodical_jobs/' + ticket_id + '.py'):
+                irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
+            else:
+                os.rename('periodical_jobs/' + ticket_id + '.py', 'temp_perjobs/' + ticket_id + '.py')
+                irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' is reopened for editing.')
     else:
         ticket_id = message[2]
         if not os.path.isfile('temp_perjobs/'+ticket_id+'.py'):
@@ -75,19 +105,35 @@ def main(message, user):
             if perjob_commands == False:
                 irc_bot_print(irc_channel, user + ': Please provide an URL first for ticket ID \'' + ticket_id + '\'.')
             else:
-                service = find_command_service(perjob_commands[0])
+                if perjob_commands[0] == 'webpage':
+                    service = 'video__webpage'
+                else:
+                    service = find_command_service(perjob_commands[0])
                 if service != None:
                     process_messages('periodical_job', service, message, user, ticket_id, service)
                 else:
-                    irc_bot_print(irc_channel, user + ': Command \'' + command[0] + '\' was removed. Please create a new periodical job.')
+                    irc_bot_print(irc_channel, user + ': Command \'' + message[0] + '\' was removed. Please create a new periodical job.')
 
 def process_messages(name, a, b, c, ticket_id, service):
     for service_message in eval('services.' + service + '.' + name + '(a, b, c)'):
-        with open('temp_perjobs/'+ticket_id+'.py', 'a') as file:
-            if service_message[0] == 'add':
-                file.write(service_message[1] + ' = ' + str(service_message[2]) + '\n')
-            elif service_message[0] == 'message':
-                irc_bot_print(irc_channel, str(service_message[1]))
+        if service_message[0] == 'add':
+            filelines = []
+            with open('temp_perjobs/'+ticket_id+'.py', 'r') as file:
+                added = False
+                for line in file:
+                    if not line.startswith(service_message[1]):
+                        filelines.append(line)
+                    else:
+                        filelines.append(service_message[1] + ' = ' + str(service_message[2]))
+                        added = True
+                if not added:
+                    filelines.append(service_message[1] + ' = ' + str(service_message[2]))
+            with open('temp_perjobs/'+ticket_id+'.py', 'w') as file:
+                file.write('\n'.join([fileline for fileline in filelines if not fileline == '']))
+        elif service_message[0] == 'message':
+            irc_bot_print(irc_channel, str(service_message[1]))
+        elif service_message[0] == 'finish':
+            os.rename('temp_perjobs/' + ticket_id + '.py', 'periodical_jobs/' + ticket_id + '.py')
 
 def process_url(url, user):
     services_list = refresh.services_list

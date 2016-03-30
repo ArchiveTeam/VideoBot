@@ -8,9 +8,10 @@ def extract_info(regexes, url):
     extracted = []
     for regex in regexes:
         if re.search(regex, html.text):
-            extracted.append(re.search(regex, html.text).group(1))
+            extracted.append(re.findall(regex, html.text))
         else:
-            extracted.append(None)
+            extracted.append('')
     if len(extracted) == 1:
         extracted = extracted[0]
     return extracted
+                
