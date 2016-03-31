@@ -4,6 +4,7 @@ import socket
 import re
 import check_command
 import services
+import refresh
 
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 irc.connect((irc_server, irc_port))
@@ -56,6 +57,9 @@ def irc_bot_listener():
                 periodical_job(command, user)
             elif command[0] == '!version':
                 irc_bot_print(irc_channel, user + ': Current version of videobot is ' + str(version) + '.')
+            elif command[0] in ('!update-services', '!us'):
+                irc_bot_print(irc_channel, user + ': Services are resfreshing.')
+                threading.Thread(target = refresh.refresh_services).start()
             else:
                 command_short = command[0].replace('!', '')
                 service = find_command_service(command_short)

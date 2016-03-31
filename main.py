@@ -7,6 +7,8 @@ import os
 import threading
 import irc_bot
 import refresh
+import upload
+import time
 
 def dashboard():
     os.system('~/.local/bin/gs-server')
@@ -20,11 +22,23 @@ def irc_bot_join():
 def refresh_services():
     refresh.refresh_services()
 
+def process_warcs():
+    while True:
+        try:
+            upload.move_warcs()
+            threading.Thread(target = upload.uploader).start()
+        except:
+            pass #for now
+        time.sleep(300)
+
 def main():
     irc_bot_join()
-    threading.Thread(target = refresh.refresh_services).start()
+    refresh.refresh_services()
+    threading.Thread(target = refresh.refresh_periodical_jobs).start()
+    threading.Thread(target = refresh.refresh_periodical_jobs_start).start()
     threading.Thread(target = irc_bot_listener).start()
     threading.Thread(target = dashboard).start()
+    threading.Thread(target = process_warcs).start()
 
 if __name__ == '__main__':
 	main()

@@ -96,6 +96,17 @@ def main(message, user):
             else:
                 os.rename('periodical_jobs/' + ticket_id + '.py', 'temp_perjobs/' + ticket_id + '.py')
                 irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' is reopened for editing.')
+    elif message[1] == '--remove':
+        if len(message) != 3:
+            irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
+        else:
+            ticket_id = message[2]
+            if os.path.isfile('periodical_jobs/' + ticket_id + '.py'):
+                os.remove('periodical_jobs/' + ticket_id + '.py')
+            elif os.path.isfile('temp_perjobs/' + ticket_id + '.py'):
+                os.remove('temp_perjobs/' + ticket_id + '.py')
+            else:
+                irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
     else:
         ticket_id = message[2]
         if not os.path.isfile('temp_perjobs/'+ticket_id+'.py'):
@@ -134,6 +145,8 @@ def process_messages(name, a, b, c, ticket_id, service):
             irc_bot_print(irc_channel, str(service_message[1]))
         elif service_message[0] == 'finish':
             os.rename('temp_perjobs/' + ticket_id + '.py', 'periodical_jobs/' + ticket_id + '.py')
+        elif service_message[0] == 'execute':
+            os.system(service_message[1])
 
 def process_url(url, user):
     services_list = refresh.services_list
@@ -142,3 +155,11 @@ def process_url(url, user):
         if re.search(service[1], url):
             for irc_bot_message in eval('services.' + service[0] + '.process(service[0].replace("video__", ""), url, user)'):
                 irc_bot_print(irc_channel, irc_bot_message)
+
+def periodical_job_start(filename, type_, user):
+    if type_[0] == 'webpage':
+        service = 'video__webpage'
+    else:
+        service = find_command_service(type_[0])
+    if service != None:
+        process_messages('periodical_job_start', filename, user, None, None, service)
