@@ -9,8 +9,8 @@ import services
 def irc_bot_print(irc_channel, irc_bot_message):
     irc_bot.irc_bot_print(irc_channel, irc_bot_message)
 
-def find_url_service(url):
-    return url.find_url_service(url)
+def find_url_service(url_):
+    return url.find_url_service(url_)
 
 def main(command, user):
     if len(command) == 1:

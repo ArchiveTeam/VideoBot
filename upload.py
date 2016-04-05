@@ -23,13 +23,11 @@ def warcnum(folder):
 def move_warcs():
     list = []
     done = True
-    if not os.path.isdir('./ready'):
-        os.makedirs('./ready')
     for folder in next(os.walk('.'))[1]:
         for root, dirs, files in os.walk("./" + folder):
             #if re.search(r'-[0-9a-z]{8}$', folder):
             #    writehtmllist(folder)
-            if (check(files, "0") == False or check(files, "1") == True) and not folder == "ready":
+            if (check(files, "0") == False or check(files, "1") == True) and not folder == "to_be_uploaded":
                 startnum = "0"
                 firstnum = None
                 moved = False
@@ -38,27 +36,26 @@ def move_warcs():
                         if firstnum > 0:
                             break
                     if os.path.isfile("./" + folder + "/" + folder + "-" + (5-len(startnum))*"0" + startnum + ".warc.gz"):
-                        print 'hi'
                         if firstnum == None:
                             firstnum = int(startnum)
                         if not startnum == "0" and not firstnum == int(startnum):
                             print(os.path.join(root, folder + "-" + str((5-len(str(int(startnum)-1)))*"0") + str(int(startnum)-1) + ".warc.gz"))
                             moved = True
-                            os.rename(os.path.join(root, folder + "-" + str((5-len(str(int(startnum)-1)))*"0") + str(int(startnum)-1) + ".warc.gz"), "./ready/" + folder + "-" + str((5-len(str(int(startnum)-1)))*"0") + str(int(startnum)-1) + ".warc.gz")
+                            os.rename(os.path.join(root, folder + "-" + str((5-len(str(int(startnum)-1)))*"0") + str(int(startnum)-1) + ".warc.gz"), "./to_be_uploaded/ia_warcs/" + folder + "-" + str((5-len(str(int(startnum)-1)))*"0") + str(int(startnum)-1) + ".warc.gz")
                     startnum = str(int(startnum) + 1)
                     if warcnum(folder) <= 1:
                         break
                     if warcnum(folder) == 2 and os.path.isfile("./" + folder + "/" + folder + "-meta.warc.gz"):
                         break
-        if os.path.isfile("./" + folder + "/" + folder + "-meta.warc.gz") and not folder == "ready":
+        if os.path.isfile("./" + folder + "/" + folder + "-meta.warc.gz") and not folder == "to_be_uploaded":
             for root, dirs, files in os.walk("./" + folder):
                 for file in files:
                     if file.endswith(".warc.gz"):
-                        list.append("./ready/" + file)
-                        os.rename(os.path.join(root, file), "./ready/" + file)
+                        list.append("./to_be_uploaded/ia_warcs/" + file)
+                        os.rename(os.path.join(root, file), "./to_be_uploaded/ia_warcs/" + file)
                 for file in files:
-                    if file.endswith(".warc.gz") and not os.path.isfile("./ready/" + file):
-                        print("./ready/" + file)
+                    if file.endswith(".warc.gz") and not os.path.isfile("./to_be_uploaded/ia_warcs/" + file):
+                        print("./to_be_uploaded/ia_warcs/" + file)
                         done = False
                 if done == True:
                     shutil.rmtree("./" + folder)

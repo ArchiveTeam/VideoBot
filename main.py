@@ -32,6 +32,10 @@ def process_warcs():
         time.sleep(300)
 
 def main():
+    if not os.path.isdir('./to_be_uploaded/ia_items'):
+        os.makedirs('./to_be_uploaded/ia_items')
+    if not os.path.isdir('./to_be_uploaded/ia_warcs'):
+        os.makedirs('./to_be_uploaded/ia_warcs')
     irc_bot_join()
     refresh.refresh_services()
     threading.Thread(target = refresh.refresh_periodical_jobs).start()

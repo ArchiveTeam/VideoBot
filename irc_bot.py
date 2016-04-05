@@ -45,7 +45,7 @@ def irc_bot_listener():
         irc_message = irc.recv(2048)
         with open('irclog', 'a') as file:
             file.write(irc_message)
-        if 'PING :' in irc_message:
+        if irc_message.startswith('PING :'):
             message = re.search(r'^[^:]+:(.*)$', irc_message).group(1)
             irc.send('PONG :' + message + '\n')
         elif re.search(r'^:.+PRIVMSG[^:]+:!.*', irc_message):
