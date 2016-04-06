@@ -45,7 +45,7 @@ def periodical_job(service_name, command, user):
         else:
             yield(['message', user + ': Crawl depth should be a number for a ' + service_name + '.'])
     elif command[1] == 'description':
-        description = ' '.join(command[3:])
+        description = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'description', '\'' + description + '\''])
         yield(['message', user + ': Added description \'' + description + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'help':

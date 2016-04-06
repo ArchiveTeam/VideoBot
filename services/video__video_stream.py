@@ -42,47 +42,47 @@ def periodical_job(service_name, command, user):
         else:
             yield(['message', user + ': Piecelength should be a number for a ' + service_name + '.'])
     elif command[1] == 'title':
-        title = ' '.join(command[3:])
+        title = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'title', '\'' + title + '\''])
         yield(['message', user + ': Added title \'' + title + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'description':
-        description = ' '.join(command[3:])
+        description = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'description', '\'' + description + '\''])
         yield(['message', user + ': Added description \'' + description + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'creator':
-        creator = ' '.join(command[3:])
+        creator = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'creator', '\'' + creator + '\''])
         yield(['message', user + ': Added creator \'' + creator + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'subject':
-        subject = ' '.join(command[3:])
+        subject = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'subject', '\'' + subject + '\''])
         yield(['message', user + ': Added subject \'' + subject + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'licenseurl':
-        licenseurl = ' '.join(command[3:])
+        licenseurl = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'licenseurl', '\'' + licenseurl + '\''])
         yield(['message', user + ': Added licenseurl \'' + licenseurl + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'notes':
-        notes = ' '.join(command[3:])
+        notes = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'notes', '\'' + notes + '\''])
         yield(['message', user + ': Added notes \'' + notes + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'rights':
-        rights = ' '.join(command[3:])
+        rights = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'rights', '\'' + rights + '\''])
         yield(['message', user + ': Added rights \'' + rights + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'publisher':
-        publisher = ' '.join(command[3:])
+        publisher = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'publisher', '\'' + publisher + '\''])
         yield(['message', user + ': Added publisher \'' + publisher + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'language':
-        language = ' '.join(command[3:])
+        language = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'language', '\'' + language + '\''])
         yield(['message', user + ': Added language \'' + language + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'coverage':
-        coverage = ' '.join(command[3:])
+        coverage = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'coverage', '\'' + coverage + '\''])
         yield(['message', user + ': Added coverage \'' + coverage + '\' to ticket ID \'' + command[2] + '\'.'])
     elif command[1] == 'credits':
-        credits = ' '.join(command[3:])
+        credits = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'credits', '\'' + credits + '\''])
         yield(['message', user + ': Added credits \'' + credits + '\' to ticket ID \'' + command[2] + '\'.'])
 
