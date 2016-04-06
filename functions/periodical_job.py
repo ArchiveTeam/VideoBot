@@ -12,15 +12,17 @@ import random
 import string
 import url
 import services
+import subprocess
+import time
 
 irc_bot_print = lambda irc_channel, irc_bot_message: irc_bot.irc_bot_print(irc_channel, irc_bot_message)
 check_temp_perjob_variable = lambda ticket_id, var: periodical_jobs.check_temp_perjob.check_temp_perjob_variable(ticket_id, var)
 get_temp_perjob_variables = lambda ticket_id: periodical_jobs.check_temp_perjob.get_temp_perjob_variables(ticket_id)
 check_valid_url = lambda url: check_valid.check_valid_url(url)
-find_url_service = lambda url: url.find_url_service(url)
-find_url_title = lambda url_service, url: url.find_url_title(url_service, url)
+find_url_service = lambda url_: url.find_url_service(url_)
+find_url_title = lambda url_service, url_: url.find_url_title(url_service, url_)
 find_url_service_name = lambda url_service: url.find_url_service_name(url_service)
-find_url_id = lambda url_service, url: url.find_url_id(url_service, url)
+find_url_id = lambda url_service, url_: url.find_url_id(url_service, url_)
 find_command_service = lambda command: check_command.find_command_service(command)
 
 command_url = ''
@@ -57,8 +59,9 @@ def main(message, user):
                 irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
             else:
                 url = message[3]
-                if check_temp_perjob_variable(ticket_id, 'url'):
+                if check_temp_perjob_variable(ticket_id, 'url') != 'var not found':
                     irc_bot_print(irc_channel, user + ': You already provided an URL for ticket ID \'' + ticket_id + '\'.')
+                    irc_bot_print(irc_channel, user + ': Create a new ticket ID to use a new URL.')
                 elif check_valid_url(url) == False:
                     irc_bot_print(irc_channel, user + ': URL \'' + url + '\' doesn\'t seem to be valid.')
                 else:
@@ -67,8 +70,16 @@ def main(message, user):
                         service_name = find_url_service_name(url_service)
                         url_id = find_url_id(url_service, url)
                         url_title = find_url_title(url_service, url)
-                        irc_bot_print(irc_channel, user + ': Found ' + service_name + ' \'' + url_title + '\' with ID \'' + url_id + '\'.')
-                        process_messages('add_url', url, ticket_id, user, ticket_id, url_service)
+                        if url_id != None:
+                            url_id_string =  'with ID \'' + url_id + '\''
+                        else:
+                            url_id_string = 'with URL \'' + url + '\''
+                        if url_title != None:
+                            url_title_string =  '\'' + url_title + '\' '
+                        else:
+                            url_title_string = ''
+                        irc_bot_print(irc_channel, user + ': Found ' + service_name + ' ' + url_title_string + url_id_string + '.')
+                        threading.Thread(target = process_messages, args = ('add_url', url, ticket_id, user, ticket_id, url_service)).start()
                     else:
                         irc_bot_print(irc_channel, user + ': URL \'' + message[3] + '\' is currently not supported.')
     elif message[1] == '--scrape-url':
@@ -80,7 +91,7 @@ def main(message, user):
                 irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
             else:
                 url = message[3]
-                if check_temp_perjob_variable(ticket_id, 'url'):
+                if check_temp_perjob_variable(ticket_id, 'url') != 'var not found':
                     irc_bot_print(irc_channel, user + ': You already provided an URL for ticket ID \'' + ticket_id + '\'.')
                 elif check_valid_url(url) == False:
                     irc_bot_print(irc_channel, user + ': URL \'' + url + '\' doesn\'t seem to be valid.')
@@ -88,7 +99,7 @@ def main(message, user):
                     url_service = 'video__webpage'
                     service_name = find_url_service_name(url_service)
                     irc_bot_print(irc_channel, user + ': Found ' + service_name + ' \'' + url + '\'.')
-                    process_messages('add_url', url, ticket_id, user, ticket_id, url_service)
+                    threading.Thread(target = process_messages, args = ('add_url', url, ticket_id, user, ticket_id, url_service)).start()
     elif message[1] == '--edit':
         if len(message) != 3:
             irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
@@ -110,6 +121,10 @@ def main(message, user):
             elif os.path.isfile('temp_perjobs/' + ticket_id + '.py'):
                 os.remove('temp_perjobs/' + ticket_id + '.py')
                 irc_bot_print(irc_channel, user + ': Periodical job with ticket ID ' + ticket_id + ' is removed.')
+            if os.path.isfile('periodical_jobs/' + ticket_id + '.pyc'):
+                os.remove('periodical_jobs/' + ticket_id + '.pyc')
+            elif os.path.isfile('temp_perjobs/' + ticket_id + '.pyc'):
+                os.remove('temp_perjobs/' + ticket_id + '.pyc')
             else:
                 irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
     elif message[1] in ('--info', '--information'):
@@ -124,8 +139,8 @@ def main(message, user):
             ticket_id = message[2]
             variable = message[3]
             variable_content = check_temp_perjob_variable(ticket_id, variable)
-            if variable_content == False:
-                irc_bot_print(irc_channel, user + ': Periodical job with ticked ID ' + ticked_id + '')
+            if variable_content == 'var not found':
+                irc_bot_print(irc_channel, user + ': Periodical job with ticket ID ' + ticked_id + '')
         else:
             irc_bot_print(irc_channel, user + ': I don\'t understand your command. Please review it.')
     else:
@@ -134,15 +149,12 @@ def main(message, user):
             irc_bot_print(irc_channel, user + ': Ticket ID \'' + ticket_id + '\' does not exist.')
         else:
             perjob_commands = check_temp_perjob_variable(ticket_id, 'type')
-            if perjob_commands == False:
+            if perjob_commands == 'var not found':
                 irc_bot_print(irc_channel, user + ': Please provide an URL first for ticket ID \'' + ticket_id + '\'.')
             else:
-                if perjob_commands[0] == 'webpage':
-                    service = 'video__webpage'
-                else:
-                    service = find_command_service(perjob_commands[0])
+                service = find_command_service(perjob_commands[0])
                 if service != None:
-                    process_messages('periodical_job', service, message, user, ticket_id, service)
+                    threading.Thread(target = process_messages, args = ('periodical_job', service, message, user, ticket_id, service)).start()
                 else:
                     irc_bot_print(irc_channel, user + ': Command \'' + message[0] + '\' was removed. Please create a new periodical job.')
 
@@ -168,6 +180,18 @@ def process_messages(name, a, b, c, ticket_id, service):
             os.rename('temp_perjobs/' + ticket_id + '.py', 'periodical_jobs/' + ticket_id + '.py')
         elif service_message[0] == 'execute':
             os.system(service_message[1])
+        elif service_message[0] == 'execute_timeout':
+            # Do not use for grab-site processes
+            command = service_message[1].split(' ')
+            timeout = int(service_message[2])
+            process = subprocess.Popen(command)
+            time.sleep(timeout)
+            if process.poll() is None:
+                process.terminate()
+                exit_code = -1
+            else:
+                exit_code = process.poll()
+            return exit_code
 
 def process_url(url, user):
     services_list = refresh.services_list
@@ -178,12 +202,9 @@ def process_url(url, user):
                 irc_bot_print(irc_channel, irc_bot_message)
 
 def periodical_job_start(filename, type_, user):
-    if type_[0] == 'webpage':
-        service = 'video__webpage'
-    else:
-        service = find_command_service(type_[0])
+    service = find_command_service(type_[0])
     if service != None:
-        process_messages('periodical_job_start', filename, user, None, None, service)
+        threading.Thread(target = process_messages, args = ('periodical_job_start', filename, user, None, None, service)).start()
 
 def periodical_job_auto_remove():
     while True:

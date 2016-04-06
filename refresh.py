@@ -35,11 +35,16 @@ def refresh_services():
     reload(services)
     for root, dirs, files in os.walk("./services"):
         for service in files:
-            if service.startswith("video__") and service.endswith(".py") and not service == 'video__webpage.py':
+            if service.startswith("video__") and service.endswith(".py"):
                 if service[:-3] in services_list:
                     break
                 else:
-                    services_list.append([service[:-3], eval('services.' + service[:-3] + '.url_regex'), eval('services.' + service[:-3] + '.service_commands')])
+                    try:
+                        url_regex = eval('services.' + service[:-3] + '.url_regex')
+                    except AttributeError:
+                        url_regex = None
+                    service_commands = eval('services.' + service[:-3] + '.service_commands')
+                    services_list.append([service[:-3], url_regex, service_commands])
                     new_services += 1
                     print('Found service ' + service[:-3] + '.')
     new_count = new_services-services_count
@@ -86,14 +91,17 @@ def refresh_periodical_jobs_start():
                 else:
                     last_start = 0
                 current_time = int(time.time())
-                print(periodical_job_list[1])
                 if last_start + periodical_job_list[1] <= current_time:
                     periodical_jobs_start[periodical_job_name] = current_time
                     threading.Thread(target = periodical_job_start, args = (periodical_job_list[0], eval('periodical_jobs.' + periodical_job_list[0] + '.type'), eval('periodical_jobs.' + periodical_job_list[0] + '.user'),)).start()
-        time.sleep(20)
+        time.sleep(1)
 
 def periodical_job_args(filename, args):
     args_ = []
     for arg in args:
-        args_.append(eval('periodical_jobs.' + filename + '.' + arg))
+        try:
+            variable_content = eval('periodical_jobs.' + filename + '.' + arg)
+        except AttributeError:
+            variable_content = ''
+        args_.append(variable_content)
     return args_

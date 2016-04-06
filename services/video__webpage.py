@@ -20,11 +20,11 @@ check_temp_perjob_variable = lambda ticket, command: periodical_jobs.check_temp_
 periodical_job_args = lambda filename, args: refresh.periodical_job_args(filename, args)
 
 service_name = 'website or webpage'
-commands = ['webpage']
+service_commands = ['webpage']
 
 def add_url(url, ticket_id, user):
     yield(['add', 'url', '\'' + url + '\''])
-    yield(['add', 'type', commands])
+    yield(['add', 'type', service_commands])
     yield(['message', user + ': Added URL \'' + url + '\' to ticket ID \'' + ticket_id + '\'.'])
     yield(['message', user + ': Set the commands. For help use \'!perjob help <Ticket ID>\'. To finish ticket ID use command \'finish\'.'])
 
@@ -54,7 +54,7 @@ def periodical_job(service_name, command, user):
         yield(['message', user + ': Set a command using \'!perjob <command> <ticket ID> <command option>\'.'])
     elif command[1] == 'finish':
         for required_command in required_commands + default_commands:
-            if check_temp_perjob_variable(command[2], required_command) == None:
+            if check_temp_perjob_variable(command[2], required_command) == 'var not found':
                 yield(['message', user + ': You are missing \'' + required_command + '\'.'])
                 break
         else:
@@ -66,5 +66,4 @@ def periodical_job(service_name, command, user):
 
 def periodical_job_start(filename, user, _):
     depth, url = periodical_job_args(filename, ['depth', 'url'])
-    yield(['message', user + ': Periodical job for ' + service_name + ' ' + url + ' with ticket ID ' + filename[:-10] + ' has started.'])
     yield(['execute', '~/.local/bin/grab-site ' + url + ' --level=' + str(depth) + ' --ua="ArchiveTeam; Googlebot/2.1" --concurrency=5 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300" > /dev/null 2>&1'])

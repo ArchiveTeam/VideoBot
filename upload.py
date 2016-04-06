@@ -1,7 +1,6 @@
 import os
 import shutil
 
-
 def uploader():
     pass
 
