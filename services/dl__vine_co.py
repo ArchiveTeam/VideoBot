@@ -9,7 +9,7 @@ wpull_hook = globals().get('wpull_hook')  # silence code checkers
 
 counter = 0
 firsturl = True
-ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'mediatype': 'movies', 'collection': 'opensource', 'date': '', 'original_url': '', 'creator': '', 'subject': '', 'url': ''}
+ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'mediatype': 'movies', 'collection': 'archiveteam_videobot', 'date': '', 'original_url': '', 'creator': '', 'subject': '', 'url': ''}
 
 def get_urls(filename, url_info, document_info):
     global counter
@@ -53,7 +53,7 @@ def exit_status(exit_code):
             if type(b) is list:
                 content_string = str(b)
             else:
-                content_string = '\'' + str(b) + '\''
+                content_string = '\'' + str(b).replace('\'', '\\\'') + '\''
             file.write(str(a) + ' = ' + content_string + '\n')
     os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
     return exit_code

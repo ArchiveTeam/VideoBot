@@ -201,8 +201,12 @@ def process_messages(name, a, b, c, ticket_id, service):
             # Do not use for grab-site processes
             command = service_message[1].split(' ')
             timeout = int(service_message[2])
+            dir_ = service_message[3]
+            with open(dir_ + 'no_upload', 'w') as file:
+                pass
             process = subprocess.Popen(command)
             time.sleep(timeout)
+            os.remove(dir_ + 'no_upload')
             if process.poll() is None:
                 process.terminate()
                 exit_code = -1

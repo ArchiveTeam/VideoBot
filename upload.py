@@ -11,7 +11,7 @@ def upload(ia_args, ia_files, ia_identifier):
 def upload_items():
     for folder in [name for name in os.listdir(os.path.join('to_be_uploaded', 'ia_items')) if os.path.isdir(os.path.join('to_be_uploaded', 'ia_items', name))]:
         files = os.listdir(os.path.join('to_be_uploaded', 'ia_items', folder))
-        if 'ia_metadata.py' in files:
+        if 'ia_metadata.py' in files and not 'no_upload' in files:
             if len(files) == 1:
                 continue
             with open(os.path.join('to_be_uploaded', 'ia_items', folder, 'ia_metadata.py'), 'r') as file:

@@ -121,4 +121,4 @@ def periodical_job_start(filename_, user, _):
             else:
                 content_string = '\'' + str(b).replace('\'', '\\\'') + '\''
             file.write(str(a) + ' = ' + content_string + '\n')
-    yield(['execute_timeout', 'mplayer -dumpstream ' + url + ' -dumpfile ' + fulldir + filename, piecelength])
+    yield(['execute_timeout', 'mplayer -dumpstream ' + url + ' -dumpfile ' + fulldir + filename, piecelength, fulldir])
