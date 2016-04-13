@@ -70,7 +70,7 @@ def refresh_periodical_jobs():
                 filename_ = filename.replace(random_string + '.py', '.py')
                 os.rename('periodical_jobs/' + filename, 'periodical_jobs/' + filename_)
                 for periodical_job_list_ in periodical_jobs_list_:
-                   if filename[:-3] in periodical_job_list_:
+                    if filename[:-3] in periodical_job_list_:
                         break
                 else:
                     periodical_jobs_list_.append([filename[:-3], eval('periodical_jobs.' + filename[:-3] + '.refreshtime')])

@@ -26,7 +26,7 @@ def process_warcs():
     while True:
         try:
             upload.move_warcs()
-            threading.Thread(target = upload.uploader).start()
+            threading.Thread(target = upload.upload_items).start()
         except:
             pass #for now
         time.sleep(300)

@@ -14,6 +14,7 @@ import url
 import services
 import subprocess
 import time
+import sys
 
 irc_bot_print = lambda irc_channel, irc_bot_message: irc_bot.irc_bot_print(irc_channel, irc_bot_message)
 check_temp_perjob_variable = lambda ticket_id, var: periodical_jobs.check_temp_perjob.check_temp_perjob_variable(ticket_id, var)
@@ -177,9 +178,25 @@ def process_messages(name, a, b, c, ticket_id, service):
         elif service_message[0] == 'message':
             irc_bot_print(irc_channel, str(service_message[1]))
         elif service_message[0] == 'finish':
-            os.rename('temp_perjobs/' + ticket_id + '.py', 'periodical_jobs/' + ticket_id + '.py')
+            required_commands = service_message[1]
+            default_commands = service_message[2]
+            user = service_message[3]
+            for required_command in required_commands + default_commands:
+                if check_temp_perjob_variable(b[2], required_command) == 'var not found':
+                    irc_bot_print(irc_channel, user + ': You are missing \'' + required_command + '\'.')
+                    break
+            else:
+                os.rename('temp_perjobs/' + ticket_id + '.py', 'periodical_jobs/' + ticket_id + '.py')
+                irc_bot_print(irc_channel, user + ': Periodical job with ticket ID \'' + b[2] + '\' is finished.')
         elif service_message[0] == 'execute':
             os.system(service_message[1])
+        elif service_message[0] == 'help':
+            required_commands = service_message[1]
+            optional_commands = service_message[2]
+            user = service_message[3]
+            irc_bot_print(irc_channel, user + ': The required commands are ' + ', '.join(required_commands) + '.')
+            irc_bot_print(irc_channel, user + ': The optional commands are ' + ', '.join(optional_commands) + '.')
+            irc_bot_print(irc_channel, user + ': Set a command using \'!perjob <command> <ticket ID> <command option>\'.')
         elif service_message[0] == 'execute_timeout':
             # Do not use for grab-site processes
             command = service_message[1].split(' ')
@@ -191,7 +208,6 @@ def process_messages(name, a, b, c, ticket_id, service):
                 exit_code = -1
             else:
                 exit_code = process.poll()
-            return exit_code
 
 def process_url(url, user):
     services_list = refresh.services_list
