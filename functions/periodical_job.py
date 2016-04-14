@@ -190,6 +190,22 @@ def process_messages(name, a, b, c, ticket_id, service):
                 irc_bot_print(irc_channel, user + ': Periodical job with ticket ID \'' + b[2] + '\' is finished.')
         elif service_message[0] == 'execute':
             os.system(service_message[1])
+        elif service_message[0] == 'bad_command':
+            bad_command = service_message[1]
+            user = service_message[2]
+            irc_bot_print(irc_channel, user + ': I don\'t understand command \'' + bad_command + '\'.')
+        elif service_message[0] == 'write_metadata':
+            ia_metadata = service_message[1]
+            fulldir = service_message[2]
+            if not os.path.isdir(fulldir):
+                os.makedirs(fulldir)
+            for a, b in ia_metadata.items():
+                with open(fulldir + 'ia_metadata.py', 'a') as file:
+                    if type(b) is list:
+                        content_string = str(b)
+                    else:
+                        content_string = '\'' + str(b).replace('\'', '\\\'') + '\''
+                    file.write(str(a) + ' = ' + content_string + '\n')
         elif service_message[0] == 'help':
             required_commands = service_message[1]
             optional_commands = service_message[2]
@@ -228,10 +244,13 @@ def periodical_job_start(filename, type_, user):
 
 def periodical_job_auto_remove():
     while True:
-        for temp_periodical_job in os.listdir('./temp_perjobs/'):
+        for temp_periodical_job in [name for name in os.listdir('./temp_perjobs/') if name.endswith('.py') and not name == '__init__.py']:
             creation_date = os.path.getctime('./temp_perjobs/' + temp_periodical_job)
             ticket_id = temp_periodical_job[:-3]
             user = check_temp_perjob_variable(ticket_id, 'user')
             if int(creation_date) + periodical_job_open_time < int(time.time()):
                 os.remove('./temp_perjobs/' + temp_periodical_job)
+                if os.path.isfile('./temp_perjobs/' + temp_periodical_job + 'c'):
+                    os.remove('./temp_perjobs/' + temp_periodical_job + 'c')
                 irc_bot_print(irc_channel, user + ': Unfinished periodical job with ticket ID ' + ticket_id + ' is expired.')
+        time.sleep(3600)

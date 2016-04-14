@@ -21,9 +21,9 @@ check_temp_perjob_variable = lambda ticket, command: periodical_jobs.check_temp_
 periodical_job_args = lambda filename, args: refresh.periodical_job_args(filename, args)
 long_string = lambda command: ' '.join(command[3:]).replace('\'', '\\\'')
 
-service_name = 'MMS or RTSP stream'
-service_commands = ['mms', 'rtsp', 'MMS', 'RTSP']
-url_regex = r'^(?:mms)|(?:MMS):\/\/'
+service_name = 'stream'
+service_commands = ['mms', 'mmsh', 'rtsp', 'rtmp', 'MMS', 'MMSH', 'RTSP', 'RTMP']
+url_regex = r'^(?:mms|mmsh|rtsp|rtmp|MMS|MMSH|RTSP|RTMP):\/\/'
 
 def add_url(url, ticket_id, user):
     print('bla' + url)
@@ -94,12 +94,12 @@ def periodical_job(service_name, command, user):
     elif command[1] == 'finish':
         yield(['finish', required_commands, default_commands, user])
     else:
-        pass
+        yield(['bad_command', command[1], user])
 
 def periodical_job_start(filename_, user, _):
     optional_commands = ['creator', 'subject', 'licenseurl', 'notes', 'rights', 'publisher', 'language', 'coverage', 'credits']
     title, url, piecelength, description = periodical_job_args(filename_, ['title', 'url', 'piecelength', 'description'])
-    piecelength = int(piecelength) + 10 # an overlap of 10 seconds.
+    piecelength = int(piecelength) + 120 # an overlap of 120 seconds.
     date = time.strftime('%Y%m%d_%H%M')
     metadata_date = date[:4] + '-' + date[4:6] + '-' + date[6:11].replace('_', ' ') + ':' + date[11:]
     itemdir = 'archiveteam_videobot_' + re.sub(r'[^0-9a-zA-Z]', r'_', title) + '_' + date
@@ -112,13 +112,5 @@ def periodical_job_start(filename_, user, _):
             ia_metadata['subject'] += ';' + content
         else:
             ia_metadata[command] = content
-    if not os.path.isdir(fulldir):
-        os.makedirs(fulldir)
-    for a, b in ia_metadata.items():
-        with open(fulldir + 'ia_metadata.py', 'a') as file:
-            if type(b) is list:
-                content_string = str(b)
-            else:
-                content_string = '\'' + str(b).replace('\'', '\\\'') + '\''
-            file.write(str(a) + ' = ' + content_string + '\n')
+    yield(['write_metadata', ia_metadata, fulldir])
     yield(['execute_timeout', 'mplayer -dumpstream ' + url + ' -dumpfile ' + fulldir + filename, piecelength, fulldir])

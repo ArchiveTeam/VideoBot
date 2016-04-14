@@ -27,9 +27,6 @@ def upload_items():
                         ia_identifier = eval(b)
                     else:
                         ia_args[a] = eval(b)
-                print(ia_args)
-                print(ia_files)
-                print(ia_identifier)
                 threading.Thread(target = upload, args = (ia_args, ia_files, ia_identifier)).start()
 
 def warcs_items():

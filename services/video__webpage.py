@@ -48,21 +48,14 @@ def periodical_job(service_name, command, user):
         description = ' '.join(command[3:]).replace('\'', '\\\'')
         yield(['add', 'description', '\'' + description + '\''])
         yield(['message', user + ': Added description \'' + description + '\' to ticket ID \'' + command[2] + '\'.'])
+
+    # Do not change this.
     elif command[1] == 'help':
-        yield(['message', user + ': The required commands are ' + ', '.join(required_commands) + '.'])
-        yield(['message', user + ': The optional commands are ' + ', '.join(optional_commands) + '.'])
-        yield(['message', user + ': Set a command using \'!perjob <command> <ticket ID> <command option>\'.'])
+        yield(['help', required_commands, optional_commands, user])
     elif command[1] == 'finish':
-        for required_command in required_commands + default_commands:
-            if check_temp_perjob_variable(command[2], required_command) == 'var not found':
-                yield(['message', user + ': You are missing \'' + required_command + '\'.'])
-                break
-        else:
-            yield(['add', 'finished', True])
-            yield(['finish'])
-            yield(['message', user + ': Periodical job with ticket ID \'' + command[2] + '\' is finished.'])
+        yield(['finish', required_commands, default_commands, user])
     else:
-        pass
+        yield(['bad_command', command[1], user])
 
 def periodical_job_start(filename, user, _):
     depth, url = periodical_job_args(filename, ['depth', 'url'])

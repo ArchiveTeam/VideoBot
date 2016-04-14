@@ -9,6 +9,7 @@ import irc_bot
 import refresh
 import upload
 import time
+import functions
 
 def dashboard():
     os.system('~/.local/bin/gs-server')
@@ -41,6 +42,7 @@ def main():
     threading.Thread(target = refresh.refresh_periodical_jobs).start()
     threading.Thread(target = refresh.refresh_periodical_jobs_start).start()
     threading.Thread(target = irc_bot_listener).start()
+    threading.Thread(target = functions.periodical_job.periodical_job_auto_remove).start()
     threading.Thread(target = dashboard).start()
     threading.Thread(target = process_warcs).start()
 

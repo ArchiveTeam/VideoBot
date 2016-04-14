@@ -4,20 +4,21 @@ import os
 import re
 import shutil
 import time
+import json
 
 wpull_hook = globals().get('wpull_hook')  # silence code checkers
 
 counter = 0
 firsturl = True
-ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'mediatype': 'movies', 'collection': 'archiveteam_videobot', 'date': '', 'original_url': '', 'creator': '', 'subject': '', 'url': ''}
+ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'mediatype': 'movies', 'collection': 'archiveteam_videobot', 'date': '', 'original_url': '', 'creator': '', 'creator_url': '', 'subject': '', 'url': ''}
 
 def get_urls(filename, url_info, document_info):
     global counter
     global firsturl
     global ia_metadata
     newurls = []
-    if re.search(r'^https?://v\.cdn\.vine\.co/r/video.+\.mp4\?', url_info["url"]):
-        filename_new = re.search(r'^https?://v\.cdn\.vine\.co/r/([^/]+)', url_info["url"]).group(1) + '.mp4'
+    if re.search(r'^https?://[^/]+\.vine\.co/r/video.+\.mp4\?', url_info["url"]):
+        filename_new = re.search(r'^https?://[^/]+\.vine\.co/r/([^/]+)', url_info["url"]).group(1) + '.mp4'
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
@@ -26,19 +27,24 @@ def get_urls(filename, url_info, document_info):
     if firsturl:
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
+            content_json = re.search(r'<script\s+type="application\/ld\+json">\s+({[^<]+})\s+<\/script>', content).group(1)
+            json_ = json.loads(content_json)
             item_id = re.search(r'^https?://(?:www\.)?vine\.co/v/([0-9a-zA-Z]+)', url_info["url"]).group(1)
-            item_name = re.search(r'"name": "([^"]+)"', content).group(1)
-            item_url = re.search(r'"url": "([^"]+)"', content).group(1)
-            item_date = re.search(r'"datePublished": "([^"]+)"', content).group(1).replace('T', ' ')
-            item_description = re.search(r'"articleBody": "([^"]+)"', content).group(1)
-            ia_metadata['identifier'] = 'videobot_vine_co_' + item_id + '_test'
+            item_name = json_['author']['name']
+            item_name_url = json_['author']['url']
+            item_url = json_['url']
+            item_date = json_['datePublished'].replace('T', ' ')
+            item_description = json_['articleBody']
+            ia_metadata['identifier'] = 'archiveteam_videobot_vine_co_' + item_id
             ia_metadata['title'] = item_description
             ia_metadata['description'] = item_description
             ia_metadata['date'] = item_date
             ia_metadata['original_url'] = url_info["url"]
             ia_metadata['url'] = item_url
             ia_metadata['creator'] = item_name
-            ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'vine', item_id, item_name])
+            ia_metadata['creator_url'] = item_name_url
+            ia_metadata['creator'] = item_name
+            ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'vine', 'vine.co', item_id, item_name])
             newurls = [{'url': url} for url in extract_urls(content, url_info["url"]) if not re.match(r'^https?://(?:www\.)?vine\.co/v/', url)]
             firsturl = False
     return newurls
