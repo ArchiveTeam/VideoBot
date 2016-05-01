@@ -34,9 +34,11 @@ def irc_bot_join():
 
 def irc_bot_print(channel, message):
     try:
+        message = ''.join([character if ord(character) < 128 else '_' for character in message])
         irc.send("PRIVMSG " + channel + " :" + message + "\n")
     except Exception as exception:
         with open('exceptions', 'a') as exceptions:
+            print(str(version) + '\n' + str(exception) + '\n\n')
             exceptions.write(str(version) + '\n' + str(exception) + '\n\n')
         new_socket()
     print("IRC BOT: " + message)

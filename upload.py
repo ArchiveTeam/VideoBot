@@ -4,8 +4,14 @@ import shutil
 import threading
 import internetarchive
 import time
+import codecs
 
 def upload(ia_args, ia_files, ia_identifier):
+    ia_files_new = []
+    for filename in ia_files:
+        if not os.path.isfile(filename + '.upload'):
+            ia_files_new.append(filename)
+    ia_files = list(ia_files_new)
     if len(ia_files) > 0:
         for filename in ia_files:
             with open(filename + '.upload', 'w') as file:
@@ -20,7 +26,7 @@ def upload_items():
         if 'ia_metadata.py' in files and len(files) > 1 and not 'no_upload' in files:
             if len(files) == 1:
                 continue
-            with open(os.path.join('to_be_uploaded', 'ia_items', folder, 'ia_metadata.py'), 'r') as file:
+            with codecs.open(os.path.join('to_be_uploaded', 'ia_items', folder, 'ia_metadata.py'), 'r') as file:
                 args = file.read().splitlines()
                 ia_args = {}
                 ia_files = []
@@ -29,7 +35,7 @@ def upload_items():
                     a, b = arg.split(' = ')
                     if a == 'files':
                         for filename in eval(b):
-                            if not os.path.isfile(os.path.join('to_be_uploaded', 'ia_items', folder, filename + '.upload')):
+                            if os.path.isfile(os.path.join('to_be_uploaded', 'ia_items', folder, filename)) and not os.path.isfile(os.path.join('to_be_uploaded', 'ia_items', folder, filename + '.upload')):
                                 ia_files.append(os.path.join('to_be_uploaded', 'ia_items', folder, filename))
                     elif a == 'identifier':
                         ia_identifier = eval(b)

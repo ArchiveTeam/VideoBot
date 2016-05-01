@@ -27,7 +27,7 @@ def get_urls(filename, url_info, document_info):
     if firsturl:
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
-            content_json = re.search(r'<script\s+type="application\/ld\+json">\s+({[^<]+})\s+<\/script>', content).group(1)
+            content_json = re.sub('(?P<string>(?P<quote>["\']).*?(?P=quote)\s*:\s*),', '\g<string>"",', re.search(r'<script\s+type="application\/ld\+json">\s+({[^<]+})\s+<\/script>', content).group(1))
             json_ = json.loads(content_json)
             item_id = re.search(r'^https?://(?:www\.)?vine\.co/v/([0-9a-zA-Z]+)', url_info["url"]).group(1)
             item_name = json_['author']['name']
