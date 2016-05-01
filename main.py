@@ -24,13 +24,14 @@ def refresh_services():
     refresh.refresh_services()
 
 def process_warcs():
+    upload.firstrun()
     while True:
         try:
             upload.move_warcs()
             threading.Thread(target = upload.upload_items).start()
         except:
             pass #for now
-        time.sleep(300)
+        time.sleep(60)
 
 def main():
     if not os.path.isdir('./to_be_uploaded/ia_items'):

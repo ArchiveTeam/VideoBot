@@ -5,6 +5,7 @@ import re
 import check_command
 import services
 import refresh
+import threading
 
 irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 irc.connect((irc_server, irc_port))
@@ -24,7 +25,7 @@ def new_socket():
     irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     irc.connect((irc_server, irc_port))
     irc_bot_join()
-    threading.Thread(target = irc_bot_listener.start())
+    threading.Thread(target = irc_bot_listener).start()
 
 def irc_bot_join():
     irc.send('USER ' + irc_nick + ' ' + irc_nick + ' ' + irc_nick + ' :This is the bot for ' + irc_channel + '. ' + github + '.\n')
