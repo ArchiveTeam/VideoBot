@@ -59,7 +59,7 @@ def exit_status(exit_code):
             if type(b) is list:
                 content_string = str(b)
             else:
-                content_string = '\'' + str(b).replace('\'', '\\\'') + '\''
+                content_string = '\'' + str(b).replace('\'', '\\\'').replace('\n', '\\n').replace('\r', '\\r') + '\''
             file.write(str(a) + ' = ' + content_string + '\n')
     os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
     return exit_code
