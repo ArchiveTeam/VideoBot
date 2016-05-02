@@ -16,7 +16,7 @@ def upload(ia_args, ia_files, ia_identifier):
         for filename in ia_files:
             with open(filename + '.upload', 'w') as file:
                 pass
-        upload_response = internetarchive.upload(ia_identifier, ia_files, metadata = ia_args, access_key = ia_access_key, secret_key = ia_secret_key, verify = True, verbose = True, delete = True, retries = 5, retries_sleep = 300)
+        upload_response = internetarchive.upload(ia_identifier, ia_files, metadata = ia_args, access_key = ia_access_key, secret_key = ia_secret_key, queue_derive = True, verify = True, verbose = True, delete = True, retries = 5, retries_sleep = 300)
         for filename in ia_files:
             os.remove(filename + '.upload')
 

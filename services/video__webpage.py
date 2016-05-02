@@ -59,4 +59,4 @@ def periodical_job(service_name, command, user):
 
 def periodical_job_start(filename, user, _):
     depth, url = periodical_job_args(filename, ['depth', 'url'])
-    yield(['execute', '~/.local/bin/grab-site ' + url + ' --level=' + str(depth) + ' --ua="ArchiveTeam; Googlebot/2.1" --concurrency=5 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300" > /dev/null 2>&1'])
+    yield(['execute', '~/.local/bin/grab-site ' + url + ' --level=' + str(depth) + ' --ua="ArchiveTeam; Googlebot/2.1" --concurrency=1 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300" > /dev/null 2>&1'])

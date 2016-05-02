@@ -38,7 +38,7 @@ def process(service_file_name, command, user):
         yield(job_aborted(user, service_name, url_id(url)))
 
 def grab(url):
-    exit_code = os.system('~/.local/bin/grab-site ' + url + ' --level=0 --custom-hooks=services/dl__vine_co.py --ua="ArchiveTeam; Googlebot/2.1" --no-sitemaps --concurrency=5 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300" > /dev/null 2>&1')
+    exit_code = os.system('~/.local/bin/grab-site ' + url + ' --level=0 --custom-hooks=services/dl__vine_co.py --ua="ArchiveTeam; Googlebot/2.1" --no-sitemaps --concurrency=1 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300" > /dev/null 2>&1')
     return exit_code
 
 def add_url(url, ticket_id, user):
