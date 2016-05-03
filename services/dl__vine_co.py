@@ -51,17 +51,16 @@ def get_urls(filename, url_info, document_info):
 
 def exit_status(exit_code):
     global ia_metadata
-    if not os.path.isdir('ia_item'):
-        os.makedirs('ia_item')
-    item_identifier = ia_metadata['identifier']
-    for a, b in ia_metadata.items():
-        with open('../ia_item/ia_metadata.py', 'a') as file:
-            if type(b) is list:
-                content_string = str(b)
-            else:
-                content_string = '\'' + str(b).replace('\'', '\\\'').replace('\n', '\\n').replace('\r', '\\r') + '\''
-            file.write(str(a) + ' = ' + content_string + '\n')
-    os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
+    if os.path.isdir('ia_item'):
+        item_identifier = ia_metadata['identifier']
+        for a, b in ia_metadata.items():
+            with open('../ia_item/ia_metadata.py', 'a') as file:
+                if type(b) is list:
+                    content_string = str(b)
+                else:
+                    content_string = '\'' + str(b).replace('\'', '\\\'').replace('\n', '\\n').replace('\r', '\\r') + '\''
+                file.write(str(a) + ' = ' + content_string + '\n')
+        os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
     return exit_code
 
 wpull_hook.callbacks.get_urls = get_urls
