@@ -159,4 +159,4 @@ def extract_urls(file, url):
     for extractedurl in re.findall(r'\[[^<a-zA-Z0-9]*(https?:?//?[^\]]+)\]', file, re.I):
         extractedurl = re.search(r'^([^#]*)', extractedurl, re.I).group(1)
         extractedurls.append(extractedurl.replace(re.search(r'^(https?:?\/\/?)', extractedurl, re.I).group(1), re.search(r'^(https?)', extractedurl, re.I).group(1) + '://'))
-    return [extractedurl.replace('&amp;', '&') for extractedurl in extractedurls]
+    return [extractedurl.replace('&amp;', '&').replace('&amp;', '&') for extractedurl in extractedurls]
