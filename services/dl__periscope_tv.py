@@ -84,11 +84,26 @@ def get_urls(filename, url_info, document_info):
 def exit_status(exit_code):
     global ia_metadata
     global tempfiles
+    tempfiles_ = list(tempfiles)
     if os.path.isdir('../ia_item'):
-        os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in tempfiles]) + '" -c copy ../ia_item/video.ts')
+        lists = []
+        listsnames = []
+        while len(tempfiles) > 0:
+            if len(tempfiles) < 500:
+                lists.append(list(tempfiles))
+                tempfiles = []
+            else:
+                lists.append(list(tempfiles[:500]))
+                tempfiles = list(tempfiles[500:])
+        for i in range(len(lists)):
+            os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in lists[i]]) + '" -c copy ../ia_item/video' + str(i) + '.ts')
+            listsnames.append('video' + str(i) + '.ts')
+        os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in listsnames]) + '" -c copy ../ia_item/video.ts')
+        print(lists)
+        print(listsnames)
         if os.path.isfile('../ia_item/video.ts'):
             ia_metadata['files'].append('video.ts')
-        for filename in ['../ia_item/' + file for file in tempfiles]:
+        for filename in ['../ia_item/' + file for file in tempfiles_] + ['../ia_item/' + file for file in listsnames]:
             os.remove(filename)
         item_identifier = ia_metadata['identifier']
         for a, b in ia_metadata.items():
