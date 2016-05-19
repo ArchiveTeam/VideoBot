@@ -15,10 +15,11 @@ ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'm
 video_id = ''
 added_to_list = []
 vmap = ''
+tempfiles = {}
 
 def accept_url(url_info, record_info, verdict, reasons):
     global added_to_list
-    if firsturl == '' or url_info["url"] in added_to_list:
+    if (firsturl == '' or url_info["url"] in added_to_list) and not '?lang=' in url_info["url"]:
         return True
     return False
 
@@ -29,6 +30,7 @@ def get_urls(filename, url_info, document_info):
     global video_id
     global added_to_list
     global vmap
+    global tempfiles
     newurls = []
     if re.search(r'^https?://video\.twimg\.com.+/[0-9a-zA-Z_-]+\.mp4', url_info["url"]):
         if re.search(r'^https?://video\.twimg\.com.+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.mp4', url_info["url"]):
@@ -47,6 +49,28 @@ def get_urls(filename, url_info, document_info):
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
             ia_metadata['files'].append(filename_new)
+    elif re.search(r'^https?://video\.twimg\.com/ext_tw_video.+/[0-9a-zA-Z_-]+\.m3u8', url_info["url"]):
+        print('hi')
+        with open(filename, 'r', encoding='utf-8') as file:
+            for line in file:
+                part = re.search(r'^(https://video\.twimg\.com)', url_info["url"]).group(1)
+                if line.startswith('/ext_tw_video') and line.strip().endswith('.m3u8'):
+                    print(part + line.strip())
+                    newurls.append({'url': part + line.strip()})
+                elif line.startswith('/ext_tw_video') and line.strip().endswith('.ts'):
+                    if re.search(r'/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', line):
+                        newurl = part + line.strip()
+                        size = re.search(r'/([0-9]+x[0-9]+)/[0-9a-zA-Z_-]+\.ts', line).group(1)
+                        if not size in tempfiles:
+                            tempfiles[size] = []
+                        tempfiles[size].append(re.search(r'/([0-9a-zA-Z_-]+\.ts)', line).group(1))
+                        newurls.append({'url': newurl})
+    elif re.search(r'^https://video\.twimg\.com/ext_tw_video.+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', url_info["url"]):
+        filename_new = re.search(r'/([0-9a-zA-Z_-]+\.ts)', url_info["url"]).group(1)
+        if not os.path.isdir('../ia_item'):
+            os.makedirs('../ia_item')
+        if not os.path.isfile('../ia_item/' + filename_new):
+            shutil.copyfile(filename, '../ia_item/' + filename_new)
     elif url_info["url"] == vmap:
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -94,12 +118,20 @@ def get_urls(filename, url_info, document_info):
             firsturl = url_info["url"]
     for newurl in newurls:
         added_to_list.append(newurl["url"])
-    return newurls
+    return [newurl for newurl in newurls if not '?lang=' in newurl['url']]
 
 def exit_status(exit_code):
     global ia_metadata
+    global tempfiles
     if os.path.isdir('../ia_item'):
         item_identifier = ia_metadata['identifier']
+        print(tempfiles)
+        if len(tempfiles) > 0:
+            for size, files in tempfiles.items():
+                os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in files]) + '" -c copy ../ia_item/' + size + '.ts')
+                ia_metadata['files'].append(size + '.ts')
+                for file in ['../ia_item/' + file for file in files]:
+                    os.remove(file)
         for a, b in ia_metadata.items():
             with open('../ia_item/ia_metadata.py', 'a') as file:
                 if type(b) is list:
