@@ -49,16 +49,16 @@ def get_urls(filename, url_info, document_info):
     elif re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+$', url_info["url"]):
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
-            content_json = html.unescape(re.search(r'<meta\s+id="broadcast-data"\s+content="([^"]+)">', content).group(1))
-            api_session = re.search('<meta\s+id="api-session"\s+content="([^"]+)">', content).group(1)
+            content_json = html.unescape(re.search(r'data-store="({[^"]+})"', content).group(1))
             json_ = json.loads(content_json)
-            item_description = json_['broadcast']['status']
-            item_id = json_['broadcast']['id']
-            item_name_id = json_['user']['id']
-            item_name_description = json_['user']['description']
-            item_name = json_['user']['display_name']
-            item_twitter = json_['user']['twitter_screen_name']
-            item_date = json_['broadcast']['created_at'].split('.')[0].replace('T', ' ')
+            api_session = json_['SessionToken']['thumbnailPlaylist']['token']['session_id']
+            item_description = json_['UserBroadcast']['broadcast']['status']
+            item_id = json_['UserBroadcast']['broadcast']['id']
+            item_name_id = json_['User']['user']['id']
+            item_name_description = json_['User']['user']['description']
+            item_name = json_['User']['user']['display_name']
+            item_twitter = json_['User']['user']['twitter_screen_name']
+            item_date = json_['UserBroadcast']['broadcast']['created_at'].split('.')[0].replace('T', ' ')
             ia_metadata['identifier'] = 'archiveteam_videobot_periscope_tv_' + item_id
             ia_metadata['description'] = item_description + '\n\n' + item_name_description
             ia_metadata['date'] = item_date
@@ -70,7 +70,8 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['creator_description'] = item_name_description
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'periscope', 'periscope.tv', item_id, item_name])
             newurls.append({'url': 'https://api.periscope.tv/api/v2/accessVideoPublic?broadcast_id=' + item_id})
-            newurls.append({'url': 'https://api.periscope.tv/api/v2/publicReplayThumbnailPlaylist?session_id=' + api_session + '&broadcast_id=' + item_id})
+            newurls.append({'url': 'https://api.periscope.tv/api/v2/publicReplayThumbnailPlaylist?broadcast_id=' + item_id + '&session_id=' + api_session})
+            newurls.append({'url': 'https://api.periscope.tv/api/v2/getBroadcastPublic?broadcast_id=' + item_id})
             newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if ((re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url) and item_id in url) or not re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url)) and not url in added_to_list]
             newurls += [{'url': url} for url in extract_urls(content_json, url_info["url"]) if not url in added_to_list]
     elif re.search(r'^https://api\.periscope\.tv/api/v2/publicReplayThumbnailPlaylist', url_info["url"]) or re.search(r'^https://api\.periscope\.tv/api/v2/accessVideoPublic', url_info["url"]) or re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url_info["url"]):
