@@ -20,7 +20,7 @@ url_regex = r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+'
 url_prefix = 'https://www.periscope.tv/w/'
 url_suffix = ''
 url_id = lambda url: re.search(r'^https?://(?:www\.)?periscope\.tv/w/([0-9a-zA-Z]+)', url).group(1)
-item_title = lambda url: extract_info(r'<meta\s+property="og:description"\s+content="([^"]+)">', url)[0]
+item_title = lambda url: extract_info(r'<meta[^>]+property="og:description"\s+content="([^"]+)"', url)[0]
 
 def process(service_file_name, command, user):
     url = check_create_url(command[1], url_prefix, url_suffix)
