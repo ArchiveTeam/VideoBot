@@ -1,4 +1,4 @@
-version = 20160525.01
+version = 20160525.02
 
 irc_server = 'irc.underworld.no'
 irc_port = 6667

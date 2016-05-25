@@ -57,7 +57,7 @@ def get_urls(filename, url_info, document_info):
             item_location_city = json_['UserBroadcast']['broadcast']['city']
             item_location_country = json_['UserBroadcast']['broadcast']['country']
             item_location_country_state = json_['UserBroadcast']['broadcast']['country_state']
-            item_location = ' — ' + (item_location_city + (', ' if item_location_country != '' else '') if item_location_city != '' else '') + item_location_country if item_location_city + item_location_country != '' else ''
+            item_location = (item_location_city + (', ' if item_location_country != '' else '') if item_location_city != '' else '') + item_location_country if item_location_city + item_location_country != '' else ''
             item_language = json_['UserBroadcast']['broadcast']['language']
             item_name_id = json_['User']['user']['id']
             item_name_description = json_['User']['user']['description']
@@ -73,7 +73,7 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['creator'] = item_name
             ia_metadata['creator_username'] = item_username
             ia_metadata['creator_id'] = item_name_id
-            ia_metadata['title'] = item_description + item_location
+            ia_metadata['title'] = item_description + (' — ' + item_location if item_location != '' else '')
             ia_metadata['language'] = item_language
             ia_metadata['creator_description'] = item_name_description
             ia_metadata['city'] = item_location_city
