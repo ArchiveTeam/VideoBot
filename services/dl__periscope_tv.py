@@ -54,9 +54,15 @@ def get_urls(filename, url_info, document_info):
             api_session = json_['SessionToken']['thumbnailPlaylist']['token']['session_id']
             item_description = json_['UserBroadcast']['broadcast']['status']
             item_id = json_['UserBroadcast']['broadcast']['id']
+            item_location_city = json_['UserBroadcast']['broadcast']['city']
+            item_location_country = json_['UserBroadcast']['broadcast']['country']
+            item_location_country_state = json_['UserBroadcast']['broadcast']['country_state']
+            item_location = ' — ' + (item_location_city + (', ' if item_location_country != '' else '') if item_location_city != '' else '') + item_location_country if item_location_city + item_location_country != '' else ''
+            item_language = json_['UserBroadcast']['broadcast']['language']
             item_name_id = json_['User']['user']['id']
             item_name_description = json_['User']['user']['description']
             item_name = json_['User']['user']['display_name']
+            item_username = json_['User']['user']['username']
             item_twitter = json_['User']['user']['twitter_screen_name']
             item_date = json_['UserBroadcast']['broadcast']['created_at'].split('.')[0].replace('T', ' ')
             ia_metadata['identifier'] = 'archiveteam_videobot_periscope_tv_' + item_id
@@ -65,9 +71,15 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['original_url'] = url_info["url"]
             ia_metadata['twitter'] = item_twitter
             ia_metadata['creator'] = item_name
+            ia_metadata['creator_username'] = item_username
             ia_metadata['creator_id'] = item_name_id
-            ia_metadata['title'] = item_description
+            ia_metadata['title'] = item_description + item_location
+            ia_metadata['language'] = item_language
             ia_metadata['creator_description'] = item_name_description
+            ia_metadata['city'] = item_location_city
+            ia_metadata['country'] = item_location_country
+            ia_metadata['country_state'] = item_location_country_state
+            ia_metadata['location'] = item_location
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'periscope', 'periscope.tv', item_id, item_name])
             newurls.append({'url': 'https://api.periscope.tv/api/v2/accessVideoPublic?broadcast_id=' + item_id})
             newurls.append({'url': 'https://api.periscope.tv/api/v2/publicReplayThumbnailPlaylist?broadcast_id=' + item_id + '&session_id=' + api_session})
