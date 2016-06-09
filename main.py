@@ -4,6 +4,7 @@
 #if not os.path.isfile('./services/__init__.py'):
 #    open('./services/__init__.py', 'w').close()
 import os
+import glob
 import threading
 import irc_bot
 import refresh
@@ -33,6 +34,14 @@ def process_warcs():
             pass #for now
         time.sleep(60)
 
+def remove_old_files():
+    for file in glob.glob('to_be_uploaded/ia_items/*/no_upload') + glob.glob('to_be_uploaded/ia_items/*/*.upload'):
+        os.remove(file)
+    while True:
+        for file in glob.glob('to_be_uploaded/ia_items/*/*.upload'):
+            os.remove(file)
+        time.sleep(21600)
+
 def main():
     if not os.path.isdir('./to_be_uploaded/ia_items'):
         os.makedirs('./to_be_uploaded/ia_items')
@@ -40,6 +49,7 @@ def main():
         os.makedirs('./to_be_uploaded/ia_warcs')
     irc_bot_join()
     refresh.refresh_services()
+    threading.Thread(target = remove_old_files).start()
     threading.Thread(target = refresh.refresh_periodical_jobs).start()
     threading.Thread(target = refresh.refresh_periodical_jobs_start).start()
     threading.Thread(target = irc_bot_listener).start()
