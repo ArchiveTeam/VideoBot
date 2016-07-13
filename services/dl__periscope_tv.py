@@ -37,7 +37,6 @@ def get_urls(filename, url_info, document_info):
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.replace('\r', '').replace('\n', '')
-                print(line)
                 if line.endswith('.ts'):
                     newurls.append({'url': re.search(r'^(https?://replay\.periscope\.tv/.+/)playlist[_0-9]*\.m3u8$', url_info["url"]).group(1) + line})
                     tempfiles.append(line)
