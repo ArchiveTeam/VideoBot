@@ -52,19 +52,20 @@ def get_urls(filename, url_info, document_info):
             content_json = html.unescape(re.search(r'data-store="({[^"]+})"', content).group(1))
             json_ = json.loads(content_json)
             api_session = json_['SessionToken']['thumbnailPlaylist']['token']['session_id']
-            item_description = json_['UserBroadcast']['broadcast']['status']
-            item_id = json_['UserBroadcast']['broadcast']['id']
-            item_location_city = json_['UserBroadcast']['broadcast']['city']
-            item_location_country = json_['UserBroadcast']['broadcast']['country']
-            item_location_country_state = json_['UserBroadcast']['broadcast']['country_state']
+            item_url_id = re.search(r'^https?://(?:www\.)?periscope\.tv/w/([0-9a-zA-Z]+)$', url_info["url"]).group(1)
+            item_description = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['status']
+            item_id = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['id']
+            item_location_city = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['city']
+            item_location_country = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['country']
+            item_location_country_state = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['country_state']
             item_location = (item_location_city + (', ' if item_location_country != '' else '') if item_location_city != '' else '') + item_location_country if item_location_city + item_location_country != '' else ''
-            item_language = json_['UserBroadcast']['broadcast']['language']
+            item_language = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['language']
             item_name_id = json_['User']['user']['id']
             item_name_description = json_['User']['user']['description']
             item_name = json_['User']['user']['display_name']
             item_username = json_['User']['user']['username']
             item_twitter = json_['User']['user']['twitter_screen_name']
-            item_date = json_['UserBroadcast']['broadcast']['created_at'].split('.')[0].replace('T', ' ')
+            item_date = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['created_at'].split('.')[0].replace('T', ' ')
             ia_metadata['identifier'] = 'archiveteam_videobot_periscope_tv_' + item_id
             ia_metadata['description'] = item_description + '\n\n' + item_name_description
             ia_metadata['date'] = item_date
@@ -81,6 +82,10 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['country_state'] = item_location_country_state
             ia_metadata['location'] = item_location
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'periscope', 'periscope.tv', item_id, item_name])
+            if not os.path.isdir('../ia_item'):
+                os.makedirs('../ia_item')
+            json.dump(json_, open('../ia_item/data.json', 'w'), indent = 4, ensure_ascii = False)
+            ia_metadata['files'].append('data.json')
             newurls.append({'url': 'https://api.periscope.tv/api/v2/accessVideoPublic?broadcast_id=' + item_id})
             newurls.append({'url': 'https://api.periscope.tv/api/v2/publicReplayThumbnailPlaylist?broadcast_id=' + item_id + '&session_id=' + api_session})
             newurls.append({'url': 'https://api.periscope.tv/api/v2/getBroadcastPublic?broadcast_id=' + item_id})
