@@ -93,7 +93,7 @@ def get_urls(filename, url_info, document_info):
             item_name = json_['videoInfo']['publisher']['name']
             item_url_t_co = json_['cardUrl']
             item_date_ = json_['status']['created_at'].replace('T', ' ')
-            item_date = item_date_[-4:] + '-' + str(months[item_date_[4:7]]) + '-' + item_date_[8:10] + ' ' + item_date_[11:19]
+            item_date = item_date_[-4:] + '-' + str(months[item_date_[4:7]]).zfill(2) + '-' + item_date_[8:10] + ' ' + item_date_[11:19]
             ia_metadata['identifier'] = 'archiveteam_videobot_twitter_com_' + item_id
             ia_metadata['description'] = item_description
             ia_metadata['date'] = item_date
