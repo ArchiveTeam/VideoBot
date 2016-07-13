@@ -49,15 +49,15 @@ def get_urls(filename, url_info, document_info):
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
             ia_metadata['files'].append(filename_new)
-    elif re.search(r'^https?://video\.twimg\.com/ext_tw_video.+/[0-9a-zA-Z_-]+\.m3u8', url_info["url"]):
+    elif re.search(r'^https?://video\.twimg\.com/(?:ext_tw_video|amplify_video).+/[0-9a-zA-Z_-]+\.m3u8', url_info["url"]):
         print('hi')
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 part = re.search(r'^(https://video\.twimg\.com)', url_info["url"]).group(1)
-                if line.startswith('/ext_tw_video') and line.strip().endswith('.m3u8'):
+                if (line.startswith('/ext_tw_video') or line.startswith('/amplify_video')) and line.strip().endswith('.m3u8'):
                     print(part + line.strip())
                     newurls.append({'url': part + line.strip()})
-                elif line.startswith('/ext_tw_video') and line.strip().endswith('.ts'):
+                elif (line.startswith('/ext_tw_video') or line.startswith('/amplify_video')) and line.strip().endswith('.ts'):
                     if re.search(r'/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', line):
                         newurl = part + line.strip()
                         size = re.search(r'/([0-9]+x[0-9]+)/[0-9a-zA-Z_-]+\.ts', line).group(1)
@@ -65,7 +65,7 @@ def get_urls(filename, url_info, document_info):
                             tempfiles[size] = []
                         tempfiles[size].append(re.search(r'/([0-9a-zA-Z_-]+\.ts)', line).group(1))
                         newurls.append({'url': newurl})
-    elif re.search(r'^https://video\.twimg\.com/ext_tw_video.+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', url_info["url"]):
+    elif re.search(r'^https://video\.twimg\.com/(?:ext_tw_video|amplify_video).+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', url_info["url"]):
         filename_new = re.search(r'/([0-9a-zA-Z_-]+\.ts)', url_info["url"]).group(1)
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
