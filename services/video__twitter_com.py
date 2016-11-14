@@ -5,6 +5,7 @@ import download_page
 import url
 import irc_message
 import json
+import requests
 
 extract_info = lambda regexes, url: download_page.extract_info(regexes, url)
 job_finished = lambda user, name, title, id: irc_message.job_finished(user, name, title, id)
@@ -27,7 +28,10 @@ def process(service_file_name, command, user):
     url = check_create_url(command[1], url_prefix, url_suffix)
     videotitle = item_title(url)
     videoid = url_id(url)
-    if videotitle != None:
+
+    if requests.get('https://archive.org/details/archiveteam_videobot_twitter_com_' + url_id(url)).status_code == 200:
+        yield(job_finished(user, service_name, videotitle, url_id(url)))
+    elif videotitle != None:
         yield(job_added(user, service_name, videotitle, url_id(url)))
         if grab(url) == 0:
             yield(job_finished(user, service_name, videotitle, url_id(url)))
