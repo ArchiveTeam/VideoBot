@@ -1,4 +1,4 @@
-from config import irc_channel
+from config import irc_channel, irc_nick
 import irc_bot
 import refresh
 import threading
@@ -24,4 +24,5 @@ def main(command, user):
 def process_url(command, user):
     url_service = find_url_service(command[1])
     for irc_bot_message in eval('services.' + url_service + '.process(url_service, command, user)'):
-        irc_bot_print(irc_channel, irc_bot_message)
+        if not irc_bot_message.startswith(irc_nick + ':'):
+            irc_bot_print(irc_channel, irc_bot_message)
