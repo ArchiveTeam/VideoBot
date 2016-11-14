@@ -140,7 +140,9 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['original_url'] = firsturl
             ia_metadata['url_t_co'] = item_url_t_co
             ia_metadata['creator'] = item_name
-            ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name])
+            ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name]
+                + re.findall(r'(#[^#\s]+)', ia_metadata['title'])
+                + re.findall(r'#([^#\s]+)', ia_metadata['title']))
 
             for url in extract_urls(' '.join([content, content_json]), url_info["url"]):
                 add_url(url)
