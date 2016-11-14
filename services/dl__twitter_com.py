@@ -17,6 +17,12 @@ added_to_list = []
 vmap = ''
 tempfiles = {}
 
+ignored_urls = []
+
+with open(os.path.join('..', '..', 'services', 'dl__ignores__twitter_com'), 'r') as f:
+    for line in f:
+        ignored_urls.append(line.strip())
+
 def accept_url(url_info, record_info, verdict, reasons):
     global added_to_list
     if (firsturl == '' or url_info["url"] in added_to_list) and not '?lang=' in url_info["url"]:
@@ -32,31 +38,58 @@ def get_urls(filename, url_info, document_info):
     global vmap
     global tempfiles
     newurls = []
+
+    def url_allowed(url, parent_url=None):
+        if re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/' + video_id, url):
+            return True
+
+        elif not re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url):
+            video_user = re.search(r'^https?://(?:www\.)?twitter\.com/([^/]+)/status/[0-9]+', firsturl).group(1)
+            if re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+(?:/status/)?$', url) and not video_user in url:
+                return False
+            return True
+
+        return False
+
+    def add_url(url, parent_url=None):
+        if url in added_to_list or url in ignored_urls:
+            return None
+        if url_allowed(url, parent_url):
+            added_to_list.append(url)
+            newurls.append({'url': url})
+
     if re.search(r'^https?://video\.twimg\.com.+/[0-9a-zA-Z_-]+\.mp4', url_info["url"]):
         if re.search(r'^https?://video\.twimg\.com.+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.mp4', url_info["url"]):
             filename_new = re.search(r'^https?://video\.twimg\.com.+/([0-9]+x[0-9]+)/[0-9a-zA-Z_-]+\.mp4', url_info["url"]).group(1) + '.mp4'
         else:
             filename_new = re.search(r'^https?://video\.twimg\.com.+/([0-9a-zA-Z_-]+\.mp4)', url_info["url"]).group(1)
+
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
             ia_metadata['files'].append(filename_new)
+
+    # Rename .mp4 video from akamaihd.
     elif re.search(r'^https?://(?:snappytv[^\.]+\.akamaihd\.net|amp\.twimg\.com).+/[^/]+\.mp4', url_info["url"]):
         filename_new = re.search(r'^https?://(?:snappytv[^\.]+\.akamaihd\.net|amp\.twimg\.com).+/([^/]+\.mp4)', url_info["url"]).group(1)
+
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
             ia_metadata['files'].append(filename_new)
+
+    # Queue videos from .m3u8 playlists.
     elif re.search(r'^https?://video\.twimg\.com/(?:ext_tw_video|amplify_video).+/[0-9a-zA-Z_-]+\.m3u8', url_info["url"]):
-        print('hi')
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 part = re.search(r'^(https://video\.twimg\.com)', url_info["url"]).group(1)
+
                 if (line.startswith('/ext_tw_video') or line.startswith('/amplify_video')) and line.strip().endswith('.m3u8'):
                     print(part + line.strip())
                     newurls.append({'url': part + line.strip()})
+
                 elif (line.startswith('/ext_tw_video') or line.startswith('/amplify_video')) and line.strip().endswith('.ts'):
                     if re.search(r'/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', line):
                         newurl = part + line.strip()
@@ -65,22 +98,29 @@ def get_urls(filename, url_info, document_info):
                             tempfiles[size] = []
                         tempfiles[size].append(re.search(r'/([0-9a-zA-Z_-]+\.ts)', line).group(1))
                         newurls.append({'url': newurl})
+
+    # Prepare .ts videos from .m3u8 playlist for merging.
     elif re.search(r'^https://video\.twimg\.com/(?:ext_tw_video|amplify_video).+/[0-9]+x[0-9]+/[0-9a-zA-Z_-]+\.ts', url_info["url"]):
         filename_new = re.search(r'/([0-9a-zA-Z_-]+\.ts)', url_info["url"]).group(1)
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
+
+    # The vmap URL contains videos.
     elif url_info["url"] == vmap:
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
             newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if not url in added_to_list]
+
+    # Prepare the metadata and queue new URLs.
     elif re.search('^https://twitter\.com/i/videos/tweet/[0-9]+\?embed_source=clientlib&player_id=0&rpc_init=1', url_info["url"]):
         with open(filename, 'r', encoding='utf-8') as file:
             months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
             content = file.read()
             content_json = html.unescape(re.search(r'data-config="([^"]+)"', content).group(1))
             json_ = json.loads(content_json)
+
             if 'vmap_url' in json_:
                 vmap = json_['vmap_url']
                 item_description = json_['status']['text'] + '\n\n' + str(json_['videoInfo']['title']) + '\n\n' + str(json_['videoInfo']['description'])
@@ -101,8 +141,11 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['url_t_co'] = item_url_t_co
             ia_metadata['creator'] = item_name
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name])
-            newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if ((re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url) and item_id in url) or not re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url)) and not url in added_to_list]
-            newurls += [{'url': url} for url in extract_urls(content_json, url_info["url"]) if ((re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url) and item_id in url) or not re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url)) and not url in added_to_list]
+
+            for url in extract_urls(' '.join([content, content_json]), url_info["url"]):
+                add_url(url)
+
+    # Queue first-URL new urls.
     if re.search('^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url_info["url"]) and video_id == '':
         video_id = re.search('^https?://(?:www\.)?twitter\.com/[^/]+/status/([0-9]+)', url_info["url"]).group(1)
         if not 'https://twitter.com/i/videos/tweet/' + video_id + '?embed_source=clientlib&player_id=0&rpc_init=1' in added_to_list:
@@ -111,13 +154,17 @@ def get_urls(filename, url_info, document_info):
             newurls.append({'url': 'https://twitter.com/i/videos/' + video_id})
         if not 'https://twitter.com/i/videos/' + video_id + '?embed_source=facebook' in added_to_list:
             newurls.append({'url': 'https://twitter.com/i/videos/' + video_id + '?embed_source=facebook'})
+
     if firsturl == '':
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
-            newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if ((re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url) and video_id in url) or not re.search(r'^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url)) and not url in added_to_list]
             firsturl = url_info["url"]
+            for url in extract_urls(content, url_info["url"]):
+                add_url(url)
+
     for newurl in newurls:
         added_to_list.append(newurl["url"])
+
     return [newurl for newurl in newurls if not '?lang=' in newurl['url']]
 
 def exit_status(exit_code):
