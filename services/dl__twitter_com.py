@@ -147,7 +147,10 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['date'] = item_date
             ia_metadata['original_url'] = firsturl
             ia_metadata['url_t_co'] = item_url_t_co
-            ia_metadata['creator'] = item_name
+            ia_metadata['user_name'] = json_['user']['name']
+            ia_metadata['user_screen_name'] = json_['user']['screen_name']
+            ia_metadata['creator'] = [item_name, ia_metadata['user_name']]
+            ia_metadata['tweet_id'] = video_id
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name]
                 + re.findall(r'(#[^#\s]+)', ia_metadata['title'])
                 + re.findall(r'#([^#\s]+)', ia_metadata['title']))
