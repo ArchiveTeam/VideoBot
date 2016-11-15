@@ -29,11 +29,12 @@ def accept_url(url_info, record_info, verdict, reasons):
         return True
     return False
 
+handle_response_grabsite = wpull_hook.callbacks.handle_response
 def handle_response(url_info, record_info, response_info):
     if response_info['status_code'] == 400:
         return wpull_hook.actions.FINISH
 
-    return wpull_hook.actions.NORMAL
+    return handle_response_grabsite(url_info, record_info, response_info)
 
 def get_urls(filename, url_info, document_info):
     global counter
