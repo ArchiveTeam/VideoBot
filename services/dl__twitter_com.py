@@ -25,9 +25,15 @@ with open(os.path.join('..', '..', 'services', 'dl__ignores__twitter_com'), 'r')
 
 def accept_url(url_info, record_info, verdict, reasons):
     global added_to_list
-    if (firsturl == '' or url_info["url"] in added_to_list) and not '?lang=' in url_info["url"]:
+    if (firsturl == '' or url_info["url"] in added_to_list) and not ('?lang=' in url_info["url"] or '\\' in url_info["url"]):
         return True
     return False
+
+def handle_response(url_info, record_info, response_info):
+    if response_info['status_code'] == 400:
+        return wpull_hook.actions.FINISH
+
+    return wpull_hook.actions.NORMAL
 
 def get_urls(filename, url_info, document_info):
     global counter
@@ -194,6 +200,7 @@ def exit_status(exit_code):
 wpull_hook.callbacks.get_urls = get_urls
 wpull_hook.callbacks.exit_status = exit_status
 wpull_hook.callbacks.accept_url = accept_url
+wpull_hook.callbacks.handle_response = handle_response
 
 def extract_urls(file, url):
     extractedurls = []
