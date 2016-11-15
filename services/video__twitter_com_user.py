@@ -37,7 +37,7 @@ def process(service_file_name, command, user):
     response = requests.get(url)
     for tweet in re.findall(r'data-permalink-path="([^"]+)"', response.text):
         functions.archive.main(['!a', 'https://twitter.com' + tweet], config.irc_nick)
-        time.sleep(5)
+        time.sleep(10)
     if 'data-min-position' in response.text:
         max_position = re.search(r'data-min-position="([^"]+)"', response.text).group(1)
         while 'data-min-position' in response.text or response_json['min_position']:
@@ -49,16 +49,12 @@ def process(service_file_name, command, user):
                 max_position = response_json['min_position']
                 for tweet in re.findall(r'data-permalink-path="([^"]+)"', response_json['items_html']):
                     functions.archive.main(['!a', 'https://twitter.com' + tweet], config.irc_nick)
-                    time.sleep(5)
+                    time.sleep(10)
             else:
                 yield(failed_extraction(user, service_name, url_id(url), 'nextpage'))
                 break
         else:
             yield(job_finished(user, service_name, videotitle, url_id(url)))
-
-def grab(url):
-    exit_code = os.system('~/.local/bin/grab-site ' + url + ' --level=0 --custom-hooks=services/dl__twitter_com_user.py --ua="ArchiveTeam; Googlebot/2.1" --no-sitemaps --concurrency=1 --warc-max-size=524288000 --wpull-args="--no-check-certificate --timeout=300"')
-    return exit_code
 
 def add_url(url, ticket_id, user):
     yield(['message', user + ': You cannot create a periodical job for a ' + name + '.'])
