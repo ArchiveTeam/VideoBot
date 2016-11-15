@@ -195,7 +195,7 @@ def get_urls(filename, url_info, document_info):
 def exit_status(exit_code):
     global ia_metadata
     global tempfiles
-    if os.path.isdir('../ia_item'):
+    if os.path.isdir('../ia_item') and len(ia_metadata['files']) > 2:
         item_identifier = ia_metadata['identifier']
         print(tempfiles)
         if len(tempfiles) > 0:
