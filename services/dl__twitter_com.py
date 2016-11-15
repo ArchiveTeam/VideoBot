@@ -193,7 +193,7 @@ def exit_status(exit_code):
 
 handle_response_grabsite = wpull_hook.callbacks.handle_response
 def handle_response(url_info, record_info, response_info):
-    if 400 <= response_info['status_code'] < 500:
+    if (400 <= response_info['status_code'] < 500) or response_info['status_code'] == 999:
         return wpull_hook.actions.FINISH
 
     return handle_response_grabsite(url_info, record_info, response_info)
