@@ -16,7 +16,7 @@ video_id = ''
 added_to_list = []
 vmap = ''
 tempfiles = {}
-tries = 0
+tries = {}
 
 ignored_urls = []
 
@@ -195,16 +195,14 @@ def exit_status(exit_code):
 handle_response_grabsite = wpull_hook.callbacks.handle_response
 def handle_response(url_info, record_info, response_info):
     global tries
+    print(url_info["url"])
 
-    if (400 <= response_info['status_code'] < 500) or response_info['status_code'] in (999, 0):
-        tries += 1
+    if not url_info["url"] in tries:
+        tries[url_info["url"]] = 0
+    elif tries[url_info["url"]] > 5:
+        return wpull_hook.actions.FINISH        
 
-        if tries > 5:
-            return wpull_hook.actions.FINISH
-
-        return wpull_hook.actions.RETRY
-
-    tries = 0
+    tries[url_info["url"]] += 1
 
     return handle_response_grabsite(url_info, record_info, response_info)
 
