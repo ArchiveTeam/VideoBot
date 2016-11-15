@@ -13,6 +13,7 @@ counter = 0
 firsturl = ''
 ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'mediatype': 'movies', 'collection': 'archiveteam_videobot', 'date': '', 'original_url': '', 'creator': '', 'subject': ''}
 video_id = ''
+video_title = ''
 added_to_list = []
 vmap = ''
 tempfiles = {}
@@ -38,6 +39,8 @@ def get_urls(filename, url_info, document_info):
     global added_to_list
     global vmap
     global tempfiles
+    global video_title
+
     newurls = []
 
     def url_allowed(url, parent_url=None):
@@ -124,18 +127,22 @@ def get_urls(filename, url_info, document_info):
 
             if 'vmap_url' in json_:
                 vmap = json_['vmap_url']
-                item_description = json_['status']['text'] + '\n\n' + str(json_['videoInfo']['title']) + '\n\n' + str(json_['videoInfo']['description'])
-                item_title = json_['status']['text']
-                ia_metadata['title'] = item_title
-            else:
-                item_description = json_['status']['text']
-                ia_metadata['title'] = item_description
+
+            item_description = video_title
+
+            if json_['videoInfo']['title']:
+                item_description += '\n\n' + str(json_['videoInfo']['title'])
+
+            if json_['videoInfo']['description']:
+                item_description += '\n\n' + str(json_['videoInfo']['description'])
+
             item_id = json_['status']['id_str']
             item_name = json_['videoInfo']['publisher']['name']
             item_url_t_co = json_['cardUrl']
             item_date_ = json_['status']['created_at'].replace('T', ' ')
             item_date = item_date_[-4:] + '-' + str(months[item_date_[4:7]]).zfill(2) + '-' + item_date_[8:10] + ' ' + item_date_[11:19]
             ia_metadata['identifier'] = 'archiveteam_videobot_twitter_com_' + item_id
+            ia_metadata['title'] = video_title
             ia_metadata['description'] = item_description
             ia_metadata['date'] = item_date
             ia_metadata['original_url'] = firsturl
@@ -145,11 +152,26 @@ def get_urls(filename, url_info, document_info):
                 + re.findall(r'(#[^#\s]+)', ia_metadata['title'])
                 + re.findall(r'#([^#\s]+)', ia_metadata['title']))
 
+            if not os.path.isdir('../ia_item'):
+                os.makedirs('../ia_item')
+            json.dump(json_, open('../ia_item/data_video.json', 'w'), indent = 4, ensure_ascii = False)
+            ia_metadata['files'].append('data_video.json')
+
             for url in extract_urls(' '.join([content, content_json]), url_info["url"]):
                 add_url(url)
 
     # Queue first-URL new urls.
     if re.search('^https?://(?:www\.)?twitter\.com/[^/]+/status/[0-9]+', url_info["url"]) and video_id == '':
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+            if not os.path.isdir('../ia_item'):
+                os.makedirs('../ia_item')
+            json.dump(json.loads(html.unescape(re.search(r'class="json-data"\s+value="([^"]+)"', content).group(1))), open('../ia_item/data.json', 'w'), indent = 4, ensure_ascii = False)
+            ia_metadata['files'].append('data.json')
+
+            video_title = html.unescape(re.search(r'<meta\s+property="og:description"\s+content=".([^"]+).">', content).group(1))
+
         video_id = re.search('^https?://(?:www\.)?twitter\.com/[^/]+/status/([0-9]+)', url_info["url"]).group(1)
         if not 'https://twitter.com/i/videos/tweet/' + video_id + '?embed_source=clientlib&player_id=0&rpc_init=1' in added_to_list:
             newurls.append({'url': 'https://twitter.com/i/videos/tweet/' + video_id + '?embed_source=clientlib&player_id=0&rpc_init=1'})
@@ -195,7 +217,6 @@ def exit_status(exit_code):
 handle_response_grabsite = wpull_hook.callbacks.handle_response
 def handle_response(url_info, record_info, response_info):
     global tries
-    print(url_info["url"])
 
     if not url_info["url"] in tries:
         tries[url_info["url"]] = 0
