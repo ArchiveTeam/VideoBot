@@ -29,13 +29,6 @@ def accept_url(url_info, record_info, verdict, reasons):
         return True
     return False
 
-handle_response_grabsite = wpull_hook.callbacks.handle_response
-def handle_response(url_info, record_info, response_info):
-    if response_info['status_code'] == 400:
-        return wpull_hook.actions.FINISH
-
-    return handle_response_grabsite(url_info, record_info, response_info)
-
 def get_urls(filename, url_info, document_info):
     global counter
     global firsturl
@@ -197,6 +190,13 @@ def exit_status(exit_code):
                 file.write(str(a) + ' = ' + content_string + '\n')
         os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
     return exit_code
+
+handle_response_grabsite = wpull_hook.callbacks.handle_response
+def handle_response(url_info, record_info, response_info):
+    if 400 <= response_info['status_code'] < 500:
+        return wpull_hook.actions.FINISH
+
+    return handle_response_grabsite(url_info, record_info, response_info)
 
 wpull_hook.callbacks.get_urls = get_urls
 wpull_hook.callbacks.exit_status = exit_status
