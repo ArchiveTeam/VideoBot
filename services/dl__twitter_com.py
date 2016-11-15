@@ -149,11 +149,14 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['url_t_co'] = item_url_t_co
             ia_metadata['user_name'] = json_['user']['name']
             ia_metadata['user_screen_name'] = json_['user']['screen_name']
-            ia_metadata['creator'] = [item_name, ia_metadata['user_name']]
+            ia_metadata['creator'] = item_name
             ia_metadata['tweet_id'] = video_id
             ia_metadata['subject'] = ';'.join(['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name]
                 + re.findall(r'(#[^#\s]+)', ia_metadata['title'])
                 + re.findall(r'#([^#\s]+)', ia_metadata['title']))
+
+            if ia_metadata['user_name'] != ia_metadata['creator']:
+                ia_metadata['creator'] = [item_name, ia_metadata['user_name']]
 
             if not os.path.isdir('../ia_item'):
                 os.makedirs('../ia_item')
@@ -201,12 +204,14 @@ def exit_status(exit_code):
     if os.path.isdir('../ia_item'):
         item_identifier = ia_metadata['identifier']
         print(tempfiles)
+
         if len(tempfiles) > 0:
             for size, files in tempfiles.items():
                 os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in files]) + '" -c copy ../ia_item/' + size + '.ts')
                 ia_metadata['files'].append(size + '.ts')
                 for file in ['../ia_item/' + file for file in files]:
                     os.remove(file)
+
         for a, b in ia_metadata.items():
             with open('../ia_item/ia_metadata.py', 'a') as file:
                 if type(b) is list:
@@ -214,6 +219,7 @@ def exit_status(exit_code):
                 else:
                     content_string = '\'' + str(b).replace('\'', '\\\'').replace('\n', '\\n').replace('\r', '\\r') + '\''
                 file.write(str(a) + ' = ' + content_string + '\n')
+
         if len(os.listdir('../ia_item')) > 3:
             print(ia_metadata['files'])
             os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
