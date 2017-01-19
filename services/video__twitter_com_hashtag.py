@@ -18,21 +18,18 @@ job_aborted = lambda user, name, id: irc_message.job_added(user, name, id)
 failed_extraction = lambda user, name, id: irc_message.failed_extraction(user, name, id)
 check_create_url = lambda url_, prefix, suffix: url.check_create_url(url_, prefix, suffix)
 
-service_name = 'Twitter account'
-service_commands = ['twitteraccount', 'twitter_account', 'twitter-account', 'twitteruser', 'twitter_user', 'twitter-user', 'ta', 'tu']
-url_regex = r'^https?://(?:www\.)?twitter\.com/[^/]+$'
-url_prefix = 'https://twitter.com/'
-url_suffix = '/media'
-url_user = lambda url: re.search(r'^https?://(?:www\.)?twitter\.com/([^/]+)', url).group(1)
-url_id = lambda url: re.sub('&quot;', '"', extract_info(r'data-user-id="([0-9]+)"', url)[0])
-item_title = lambda url: re.sub('&quot;', '"', extract_info(r'data-name="([^"]+)"', url)[0])
+service_name = 'Twitter hashtag'
+service_commands = ['twitterhashtag', 'twitter_hashtag', 'twitter-hashtag', 'twittertag', 'twitter_tag', 'twitter-tag', 'ta', 'tt']
+url_regex = r'^https?://(?:www\.)?twitter\.com/hashtag/[^/]+$'
+url_prefix = 'https://twitter.com/hashtag/'
+url_suffix = '?f=videos'
+url_user = lambda url: re.search(r'^https?://(?:www\.)?twitter\.com/hashtag/([^/]+)', url).group(1)
 
 def process(service_file_name, command, user):
-    url = check_create_url(command[1] + '/media', url_prefix, url_suffix)
-    videotitle = item_title(url)
-    videoid = url_id(url)
+    url = check_create_url(command[1] + url_suffix, url_prefix, url_suffix)
+    videotitle = '#' + url_user(url)
 
-    yield(job_added(user, service_name, videotitle, videoid))
+    yield(job_added(user, service_name, videotitle))
 
     response = requests.get(url)
     for tweet in re.findall(r'data-permalink-path="([^"]+)"', response.text):
@@ -41,8 +38,8 @@ def process(service_file_name, command, user):
     if 'data-min-position' in response.text:
         max_position = re.search(r'data-min-position="([^"]+)"', response.text).group(1)
         while 'data-min-position' in response.text or response_json['min_position']:
-            response = requests.get('https://twitter.com/i/profiles/show/'
-                + url_user(url) + '/media_timeline?include_available_features=1&include_entities=1&max_position='
+            response = requests.get('https://twitter.com/i/search/timeline?f=videos&vertical=default&q=%23'
+                + url_user(url) + '&include_available_features=1&include_entities=1&max_position='
                 + max_position + '&reset_error_state=false')
             if response.status_code == 200:
                 response_json = json.loads(response.text)

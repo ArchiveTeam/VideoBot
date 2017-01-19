@@ -15,6 +15,7 @@ ia_metadata = {'identifier': '', 'files': [], 'title': '', 'description': '', 'm
 video_id = ''
 added_to_list = []
 tempfiles = []
+tries = {}
 
 def accept_url(url_info, record_info, verdict, reasons):
     global added_to_list
@@ -31,28 +32,33 @@ def get_urls(filename, url_info, document_info):
     global added_to_list
     global tempfiles
     newurls = []
+
     if firsturl == '':
         firsturl = url_info["url"]
-    if re.search(r'^https?://replay\.periscope\.tv/.+/playlist[_0-9]*\.m3u8$', url_info["url"]):
+
+    if re.search(r'^https?://[^\.]+\.periscope\.tv/.+/playlist[_0-9]*\.m3u8$', url_info["url"]):
         with open(filename, 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.replace('\r', '').replace('\n', '')
                 if line.endswith('.ts'):
-                    newurls.append({'url': re.search(r'^(https?://replay\.periscope\.tv/.+/)playlist[_0-9]*\.m3u8$', url_info["url"]).group(1) + line})
+                    newurls.append({'url': re.search(r'^(https?://[^\.]+\.periscope\.tv/.+/)playlist[_0-9]*\.m3u8$', url_info["url"]).group(1) + line})
                     tempfiles.append(line)
-    elif re.search(r'^https?://replay\.periscope\.tv/.+/chunk_[0-9]+\.ts$', url_info["url"]):
-        filename_new = re.search(r'^https?://replay\.periscope\.tv/.+/(chunk_[0-9]+\.ts)$', url_info["url"]).group(1)
+
+    elif re.search(r'^https?://[^\.]+\.periscope\.tv/.+/chunk_[0-9]+\.ts$', url_info["url"]):
+        filename_new = re.search(r'^https?://[^\.]+\.periscope\.tv/.+/(chunk_[0-9]+\.ts)$', url_info["url"]).group(1)
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
             shutil.copyfile(filename, '../ia_item/' + filename_new)
+
     elif re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+$', url_info["url"]):
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
             content_json = html.unescape(re.search(r'data-store="({[^"]+})"', content).group(1))
             json_ = json.loads(content_json)
-            api_session = json_['SessionToken']['thumbnailPlaylist']['token']['session_id']
+            api_session = json_['SessionToken']['public']['thumbnailPlaylist']['token']['session_id']
             item_url_id = re.search(r'^https?://(?:www\.)?periscope\.tv/w/([0-9a-zA-Z]+)$', url_info["url"]).group(1)
+            item_name_id = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['user_id']
             item_description = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['status']
             item_id = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['id']
             item_location_city = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['city']
@@ -60,11 +66,10 @@ def get_urls(filename, url_info, document_info):
             item_location_country_state = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['country_state']
             item_location = (item_location_city + (', ' if item_location_country != '' else '') if item_location_city != '' else '') + item_location_country if item_location_city + item_location_country != '' else ''
             item_language = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['language']
-            item_name_id = json_['User']['user']['id']
-            item_name_description = json_['User']['user']['description']
-            item_name = json_['User']['user']['display_name']
-            item_username = json_['User']['user']['username']
-            item_twitter = json_['User']['user']['twitter_screen_name']
+            item_name_description = json_['UserCache']['users'][item_name_id]['user']['description']
+            item_name = json_['UserCache']['users'][item_name_id]['user']['display_name']
+            item_username = json_['UserCache']['users'][item_name_id]['user']['username']
+            item_twitter = json_['UserCache']['users'][item_name_id]['user']['twitter_screen_name']
             item_date = json_['BroadcastCache']['broadcasts'][item_url_id]['broadcast']['created_at'].split('.')[0].replace('T', ' ')
             ia_metadata['identifier'] = 'archiveteam_videobot_periscope_tv_' + item_id
             ia_metadata['description'] = item_description + '\n\n' + item_name_description
@@ -91,21 +96,27 @@ def get_urls(filename, url_info, document_info):
             newurls.append({'url': 'https://api.periscope.tv/api/v2/getBroadcastPublic?broadcast_id=' + item_id})
             newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if ((re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url) and item_id in url) or not re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url)) and not url in added_to_list]
             newurls += [{'url': url} for url in extract_urls(content_json, url_info["url"]) if not url in added_to_list]
+
     elif re.search(r'^https://api\.periscope\.tv/api/v2/publicReplayThumbnailPlaylist', url_info["url"]) or re.search(r'^https://api\.periscope\.tv/api/v2/accessVideoPublic', url_info["url"]) or re.search(r'^https?://(?:www\.)?periscope\.tv/w/[0-9a-zA-Z]+', url_info["url"]):
         with open(filename, 'r', encoding='utf-8') as file:
             content = html.unescape(file.read())
             newurls += [{'url': url} for url in extract_urls(content, url_info["url"]) if not url in added_to_list]
+
     for newurl in newurls:
         added_to_list.append(newurl["url"])
+
     return newurls
 
 def exit_status(exit_code):
     global ia_metadata
     global tempfiles
+
     tempfiles_ = list(tempfiles)
+
     if os.path.isdir('../ia_item'):
         lists = []
         listsnames = []
+
         while len(tempfiles) > 0:
             if len(tempfiles) < 500:
                 lists.append(list(tempfiles))
@@ -113,17 +124,24 @@ def exit_status(exit_code):
             else:
                 lists.append(list(tempfiles[:500]))
                 tempfiles = list(tempfiles[500:])
+
         for i in range(len(lists)):
             os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in lists[i]]) + '" -c copy ../ia_item/video' + str(i) + '.ts')
             listsnames.append('video' + str(i) + '.ts')
+
         os.system('ffmpeg -i "concat:' + '|'.join(['../ia_item/' + file for file in listsnames]) + '" -c copy ../ia_item/video.ts')
+
         print(lists)
         print(listsnames)
+
         if os.path.isfile('../ia_item/video.ts'):
             ia_metadata['files'].append('video.ts')
+
         for filename in ['../ia_item/' + file for file in tempfiles_] + ['../ia_item/' + file for file in listsnames]:
             os.remove(filename)
+
         item_identifier = ia_metadata['identifier']
+
         for a, b in ia_metadata.items():
             with open('../ia_item/ia_metadata.py', 'a') as file:
                 if type(b) is list:
@@ -132,11 +150,26 @@ def exit_status(exit_code):
                     content_string = '\'' + str(b).replace('\'', '\\\'').replace('\n', '\\n').replace('\r', '\\r') + '\''
                 file.write(str(a) + ' = ' + content_string + '\n')
         os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
+
     return exit_code
+
+handle_response_grabsite = wpull_hook.callbacks.handle_response
+def handle_response(url_info, record_info, response_info):
+    global tries
+
+    if not url_info["url"] in tries:
+        tries[url_info["url"]] = 0
+    elif tries[url_info["url"]] > 5:
+        return wpull_hook.actions.FINISH        
+
+    tries[url_info["url"]] += 1
+
+    return handle_response_grabsite(url_info, record_info, response_info)
 
 wpull_hook.callbacks.get_urls = get_urls
 wpull_hook.callbacks.exit_status = exit_status
 wpull_hook.callbacks.accept_url = accept_url
+wpull_hook.callbacks.handle_response = handle_response
 
 def extract_urls(file, url):
     extractedurls = []

@@ -1,9 +1,9 @@
-version = 20160609.01
+version = 20170118.01
 
 irc_server = 'irc.underworld.no'
 irc_port = 6667
 irc_channel = '#videobot'
-irc_nick = 'videosaver'
+irc_nick = 'video'
 
 github = 'https://github.com/ArchiveTeam/VideoBot'
 

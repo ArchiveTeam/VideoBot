@@ -223,6 +223,7 @@ def exit_status(exit_code):
         if len(os.listdir('../ia_item')) > 3:
             print(ia_metadata['files'])
             os.rename('../ia_item', '../../to_be_uploaded/ia_items/ia_item_' + item_identifier + '_' + str(int(time.time())))
+
     return exit_code
 
 handle_response_grabsite = wpull_hook.callbacks.handle_response

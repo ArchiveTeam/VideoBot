@@ -31,7 +31,7 @@ def upload_items():
                 ia_files = []
                 ia_identifier = None
                 for arg in args:
-                    a, b = arg.split(' = ')
+                    a, b = arg.split(' = ', 1)
                     if a == 'files':
                         for filename in eval(b):
                             if os.path.isfile(os.path.join('to_be_uploaded', 'ia_items', folder, filename)) and not os.path.isfile(os.path.join('to_be_uploaded', 'ia_items', folder, filename + '.upload')):
