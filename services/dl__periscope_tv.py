@@ -44,8 +44,8 @@ def get_urls(filename, url_info, document_info):
                     newurls.append({'url': re.search(r'^(https?://[^\.]+\.periscope\.tv/.+/)playlist[_0-9]*\.m3u8$', url_info["url"]).group(1) + line})
                     tempfiles.append(line)
 
-    elif re.search(r'^https?://[^\.]+\.periscope\.tv/.+/chunk_[0-9]+\.ts$', url_info["url"]):
-        filename_new = re.search(r'^https?://[^\.]+\.periscope\.tv/.+/(chunk_[0-9]+\.ts)$', url_info["url"]).group(1)
+    elif re.search(r'^https?://[^\.]+\.periscope\.tv/.+/chunk_[0-9_a-z]+\.ts$', url_info["url"]):
+        filename_new = re.search(r'^https?://[^\.]+\.periscope\.tv/.+/(chunk_[0-9_a-z]+\.ts)$', url_info["url"]).group(1)
         if not os.path.isdir('../ia_item'):
             os.makedirs('../ia_item')
         if not os.path.isfile('../ia_item/' + filename_new):
