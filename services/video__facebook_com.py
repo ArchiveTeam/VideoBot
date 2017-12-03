@@ -29,7 +29,7 @@ def process(service_file_name, command, user):
     videotitle = item_title(url)
     videoid = url_id(url)
 
-    if requests.get('https://archive.org/details/archiveteam_videobot_twitter_com_' + url_id(url)).status_code == 200:
+    if requests.get('https://archive.org/details/archiveteam_videobot_facebook_com_' + url_id(url)).status_code == 200:
         yield(job_finished(user, service_name, videotitle, url_id(url)))
     elif videotitle != None:
         yield(job_added(user, service_name, videotitle, url_id(url)))

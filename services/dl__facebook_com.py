@@ -17,12 +17,6 @@ tries = {}
 video_file = None
 item_id = None
 
-ignored_urls = []
-
-with open(os.path.join('..', '..', 'services', 'dl__ignores__twitter_com'), 'r') as f:
-    for line in f:
-        ignored_urls.append(line.strip())
-
 def accept_url(url_info, record_info, verdict, reasons):
     global added_to_list
     if (firsturl == '' or url_info["url"] in added_to_list) and not '\\' in url_info["url"]:
@@ -42,7 +36,7 @@ def get_urls(filename, url_info, document_info):
         return True
 
     def add_url(url, parent_url=None):
-        if url in added_to_list or url in ignored_urls:
+        if url in added_to_list:
             return None
         if url_allowed(url, parent_url):
             added_to_list.append(url)
@@ -74,7 +68,7 @@ def get_urls(filename, url_info, document_info):
             ia_metadata['creator'] = item_name
             ia_metadata['creator_id'] = re.search('^https?://[^/]+/([^/]+)/videos/', url_info["url"]).group(1)
             ia_metadata['video_id'] = item_id
-            ia_metadata['subject'] = ['videobot', 'archiveteam', 'twitter', 'twitter.com', item_id, item_name]
+            ia_metadata['subject'] = ['videobot', 'archiveteam', 'facebook', 'facebook.com', item_id, item_name]
 
     for newurl in newurls:
         added_to_list.append(newurl['url'])
